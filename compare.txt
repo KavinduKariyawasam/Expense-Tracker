@@ -1,0 +1,102 @@
+-------------- 6.jpg ------------------------
+%%%%%%%% PPOCR-V5 %%%%%%%%%
+
+{
+  "vendor": "Beyondinspiration",
+  "invoice_date": "2025-06-19",
+  "items": [
+    {
+      "description": "ICED COFFEE",
+      "quantity": 2,
+      "unit_price": 450.0,
+      "line_total": 900.0
+    }
+  ],
+  "invoice_total": 900.0
+}
+
+%%%%%%%% EASYOCR %%%%%%%%%
+
+{
+  "vendor": "Rebel",
+  "invoice_date": "2025-06-19",
+  "items": [
+    {
+      "description": "ICED COFFEE",
+      "quantity": 2,
+      "unit_price": 450.0,
+      "line_total": 900.0
+    }
+  ],
+  "invoice_total": 900.0
+}
+
+
+-------------- 5.jpg ------------------------
+%%%%%%%% PPOCR-V5 %%%%%%%%%
+
+{
+  "vendor": "Keells",
+  "invoice_date": "2025-06-19",
+  "items": [
+    {
+      "description": "CHICKEN FPIED RICE WITH CHOP SUEY",
+      "quantity": 1.0,
+      "unit_price": 670.0,
+      "line_total": 670.0
+    },
+    {
+      "description": "WHITE SUGAR BULKKG",
+      "quantity": 0.258,
+      "unit_price": 221.0,
+      "line_total": 57.02
+    },
+    {
+      "description": "COCA COLA PET 400ML",
+      "quantity": 1.0,
+      "unit_price": 200.0,
+      "line_total": 200.0
+    },
+    {
+      "description": "MUNCHEE MILK CREAM BISCUIT 220G",
+      "quantity": 1.0,
+      "unit_price": 220.0,
+      "line_total": 220.0
+    }
+  ],
+  "invoice_total": 1125.02
+}
+
+%%%%%%%% EASYOCR %%%%%%%%%
+
+{
+  "vendor": "Reell",
+  "invoice_date": "2024-06-19",
+  "items": [
+    {
+      "description": "CHICKEN FPIED RICE WITH Chop SUEY",
+      "quantity": 1,
+      "unit_price": 670.0,
+      "line_total": 670.0
+    },
+    {
+      "description": "WHITE SUGAR BULK KG",
+      "quantity": 2,
+      "unit_price": 57.02,
+      "line_total": 114.04
+    },
+    {
+      "description": "COCA COLA PET 4OOML",
+      "quantity": 1,
+      "unit_price": 200.0,
+      "line_total": 200.0
+    },
+    {
+      "description": "MLINCHEE MILK CREAM BISCUIT 220G",
+      "quantity": 1,
+      "unit_price": 220.0,
+      "line_total": 220.0
+    }
+  ],
+  "invoice_total": 1125.02
+}
