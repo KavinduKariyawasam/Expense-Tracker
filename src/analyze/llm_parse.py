@@ -10,9 +10,10 @@ load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     raise ValueError("Please set the GROQ_API_KEY environment variable")
+
 client = Groq(api_key=api_key)
 
-def parse_invoice_groq(ocr_text):
+def parse_invoice(ocr_text):
     INVOICE_SCHEMA = {
         "vendor": "string",
         "invoice_date": "YYYY-MM-DD",
@@ -46,10 +47,10 @@ def parse_invoice_groq(ocr_text):
     ]
 
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="llama-3.3-70b-versatile",
         messages=messages,
         max_tokens=1024,
-        temperature=0.6
+        temperature=0.4
     )
 
     content = response.choices[0].message.content
@@ -86,7 +87,7 @@ def categorize_and_sum_items(items):
         model="llama3-70b-8192",
         messages=messages,
         max_tokens=1024,
-        temperature=0.4
+        temperature=0.6
     )
 
     content = response.choices[0].message.content.strip()
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     sample_text = (
         """""CTRADER JOE'S", '2001 Greenville Ave', 'Dallas TX 75206', 'Store#403-(469)334-0614', 'OPEN 8:00AM T0 9:00PMDAILY', 'R-CARROTS SHREDDED 10 OZ', '1.29', 'R-CUCUMBERS PERSIAN1LB', '1.99', 'TOMATOES CRUSHED NO SALT', '1.59', 'TOMATOES WHOLENO SALT W/BASIL', '1.59', 'ORGANICOLDFASHIONEDOATMEAL', '2.69', 'MINI-PEARL TOMATOES..', '2.49', 'PKGSHREDDEDMOZZARELLALITET', '3.99', 'EGGS 1DOZ ORGANIC BROWN.', '3.79', 'BEANS GARBANZO', '0.89', 'SPROUTED CA STYLE', 'A-AVOCADOS HASS BAG4CT', '2.99', 'A-APPLE BAG JAZZ 2LB', '3.99', 'A-PEPPER BELL EACH XL RED', '2.99', 'GROCERY NONTAXABLE', '0.99', '2 @ 0.49', '0.98', 'BANANAS ORGANIC', '3EA', '@0.29/EA', '0.87', 'CREAMYSALTED PEANUT BUTTER', 'WHL WHT PITA BREAD', '2.49', 'GROCERYNONTAXABLE', '1.69', '2 @0.69', '1.38', 'SUBTOTAL', '$38.68', 'TOTAL', '$38.68', 'CASH', '$40.00', 'CHANGE', '$1.32', 'ITEMS 22', 'Higgins, Ryan', '06-28-2014', '12:34PM', '04030413464683', 'THANK YOU FOR SHOPPING AT', "TRADER JOE'S", 'www.traderjoes.com'"""
     )
-    parsed = parse_invoice_groq(sample_text)
+    parsed = parse_invoice(sample_text)
     invoice = json.dumps(parsed, indent=2)
     # breakpoint()
     

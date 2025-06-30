@@ -16,7 +16,7 @@ def ocr_with_easyocr(image, langs = ['en']):
     
     # for (bbox, text, prob) in results:
     #     print(f'Text: {text}, Probability: {prob}')
-    # print(results)
+    print(results)
     text = "\n".join(results)
     return text
 
@@ -39,7 +39,7 @@ def ocr_with_paddleocr(denoised_image):
     # Convert grayscale to 3-channel (RGB format)
     denoised_rgb = cv2.cvtColor(denoised_image, cv2.COLOR_GRAY2RGB)
     result = ocr.ocr(denoised_rgb)
-    # print("PaddleOCR Result:", result)
+    # print("PaddleOCR Result:", result[0]["rec_texts"])
         # breakpoint()
     return result[0]["rec_texts"]
         # for res in result:

@@ -11,20 +11,21 @@ def order_points(pts):
     s = pts.sum(axis=1)
     diff = np.diff(pts, axis=1)
     rect = np.zeros((4, 2), dtype="float32")
-    rect[0] = pts[np.argmin(s)]       # top-left
-    rect[2] = pts[np.argmax(s)]       # bottom-right
-    rect[1] = pts[np.argmin(diff)]    # top-right
-    rect[3] = pts[np.argmax(diff)]    # bottom-left
+    rect[0] = pts[np.argmin(s)]       # top-left smallest (x+y)
+    rect[2] = pts[np.argmax(s)]       # bottom-right largest (x+y)
+    rect[1] = pts[np.argmin(diff)]    # top-right smallest (x-y)
+    rect[3] = pts[np.argmax(diff)]    # bottom-left largest (x-y)
     return rect
 
-def preprocess_image(img_path):
-    img = io.imread(img_path)
+def preprocess_image(img):
     gray = color.rgb2gray(img)
+    # DCT-based filtering
     frequencies = dct(dct(gray, axis=0), axis=1)
     frequencies[:2,:2] = 0
     gray = idct(idct(frequencies, axis=1), axis=0)
     gray = (gray - gray.min()) / (gray.max() - gray.min())
     
+    # Masking and Thresholding
     mask = filters.gaussian(gray, 2) > 0.5
     mask = morphology.binary_closing(mask, footprint=morphology.disk(2))
     mask = binary_fill_holes(mask, structure=morphology.disk(3, bool))
@@ -62,6 +63,7 @@ def preprocess_image(img_path):
         print("Skipping warping: dimensions too small")
         warped = (img * 255).astype(np.uint8)
     else:
+        # desired destination points for the warped image
         dst = np.array([
             [0, 0],
             [maxWidth - 1, 0],
@@ -69,6 +71,24 @@ def preprocess_image(img_path):
             [0, maxHeight - 1]], dtype="float32")
 
         M = cv2.getPerspectiveTransform(ordered_pts, dst)
-        warped = cv2.warpPerspective((img * 255).astype(np.uint8), M, (maxWidth, maxHeight))
+        # warped = cv2.warpPerspective((img * 255).astype(np.uint8), M, (maxWidth, maxHeight))
+        warped = cv2.warpPerspective(img, M, (maxWidth, maxHeight))
 
-    return warped
+    gray_col = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+    gray_col = cv2.fastNlMeansDenoising(gray_col, None, h=11, templateWindowSize=31, searchWindowSize=9)
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    gray_col = clahe.apply(gray_col)         # boosts faint print
+
+    # bw = cv2.adaptiveThreshold(gray_col, 255,
+    #                         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    #                         cv2.THRESH_BINARY, 25, 15)
+
+    # bw_rgb = cv2.cvtColor(bw, cv2.COLOR_GRAY2RGB) 
+    return gray_col
+
+def preprocess(img_path):
+    img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+    pre = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    denoised = cv2.fastNlMeansDenoising(pre, None, h=11, templateWindowSize=31, searchWindowSize=9)
+    return denoised
