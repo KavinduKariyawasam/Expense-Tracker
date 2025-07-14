@@ -3,17 +3,30 @@ import re
 import json
 from groq import Groq
 from dotenv import load_dotenv
+import logging
+import sys
+from src.utils import ColorFormatter
 
 load_dotenv()
 
 # Initialize Groq client using environment variable
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
+handler = logging.StreamHandler(sys.stdout)
+formatter = ColorFormatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logging.basicConfig(level=LOG_LEVEL, handlers=[handler])
+
+if not GROQ_API_KEY:
+    logging.error("GROQ_API_KEY is not set in the environment variables.")
     raise ValueError("Please set the GROQ_API_KEY environment variable")
 
-client = Groq(api_key=api_key)
+client = Groq(api_key=GROQ_API_KEY)
 
 def parse_invoice(ocr_text):
+    logging.info("Starting invoice parsing with GroqChat...")
     INVOICE_SCHEMA = {
         "vendor": "string",
         "invoice_date": "YYYY-MM-DD",
@@ -47,7 +60,7 @@ def parse_invoice(ocr_text):
     ]
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=GROQ_MODEL,
         messages=messages,
         max_tokens=1024,
         temperature=0.4
@@ -67,6 +80,7 @@ def parse_invoice(ocr_text):
 
 
 def categorize_and_sum_items(items):
+    logging.info("Starting item categorization with GroqChat...")
     items_text = json.dumps(items, indent=2)
 
     CATEGORY_PROMPT = (
@@ -84,15 +98,15 @@ def categorize_and_sum_items(items):
     ]
 
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model=GROQ_MODEL,
         messages=messages,
         max_tokens=1024,
         temperature=0.6
     )
 
     content = response.choices[0].message.content.strip()
-    print("LLM Response Content:\n", content)
-    # breakpoint()
+
+    logging.debug("LLM response content: %s", content)
 
     content_clean = re.sub(r'^```(?:json)?\s*', '', content, flags=re.MULTILINE)
     content_clean = re.sub(r'```$', '', content_clean, flags=re.MULTILINE)
@@ -100,6 +114,7 @@ def categorize_and_sum_items(items):
     try:
         categorized_items = json.loads(content_clean)
     except json.JSONDecodeError:
+        logging.error("Failed to parse LLM response as JSON: %s", content_clean)
         raise ValueError(f"Could not parse LLM response as JSON:\n{content_clean}")
 
     totals = {}

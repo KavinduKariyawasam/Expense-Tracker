@@ -3,11 +3,25 @@ import easyocr
 import numpy as np
 from paddleocr import PaddleOCR
 import cv2
+from src.utils import ColorFormatter
+import logging
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Set up logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+handler = logging.StreamHandler()
+formatter = ColorFormatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logging.basicConfig(level=LOG_LEVEL, handlers=[handler])
 
 # Initialize EasyOCR reader
 EASYOCR_READER = easyocr.Reader(['en'], gpu=False)
 
 def ocr_with_easyocr(image, langs = ['en']):
+    logging.info("Starting OCR with EasyOCR...")
     if len(image.shape) == 2:
         img = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     else:
@@ -21,6 +35,7 @@ def ocr_with_easyocr(image, langs = ['en']):
     return text
 
 def ocr_with_paddleocr(denoised_image):
+    logging.info("Starting OCR with PaddleOCR...")
     # ocr = PaddleOCR(
     #     use_doc_orientation_classify=False, 
     #     use_doc_unwarping=False, 

@@ -4,6 +4,22 @@ import cv2
 import numpy as np
 import fitz
 from PIL import Image
+import logging
+
+class ColorFormatter(logging.Formatter):
+    COLORS = {
+        'DEBUG': '\033[36m',    # Cyan
+        'INFO': '\033[32m',     # Green
+        'WARNING': '\033[33m',  # Yellow
+        'ERROR': '\033[31m',    # Red
+        'CRITICAL': '\033[41m', # Red background
+    }
+    RESET = '\033[0m'
+
+    def format(self, record):
+        color = self.COLORS.get(record.levelname, self.RESET)
+        message = super().format(record)
+        return f"{color}{message}{self.RESET}"
 
 def unwarp_image(image_path):
     unwarp = Unwarp(providers=["CPUExecutionProvider"])
