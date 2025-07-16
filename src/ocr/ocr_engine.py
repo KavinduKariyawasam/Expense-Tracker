@@ -30,7 +30,7 @@ def ocr_with_easyocr(image, langs = ['en']):
     
     # for (bbox, text, prob) in results:
     #     print(f'Text: {text}, Probability: {prob}')
-    print(results)
+    # print(results)
     text = "\n".join(results)
     return text
 
