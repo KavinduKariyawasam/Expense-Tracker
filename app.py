@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Path, UploadFile, File
-from main import run_ocr_only, run_ocr_only_bytes
+from backend.main import run_ocr_only, run_ocr_only_bytes
 
 app = FastAPI()
 
