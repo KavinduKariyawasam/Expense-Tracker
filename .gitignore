@@ -3,6 +3,7 @@ data/
 __pycache__/
 output/
 notebooks/
+compare.txt
 
 # Created by https://www.toptal.com/developers/gitignore/api/react,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,python
