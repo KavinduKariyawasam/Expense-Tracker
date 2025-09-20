@@ -1,0 +1,441 @@
+.yearly-summary-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid #e1e5e9;
+  max-width: 1200px;
+  margin: 0 auto 24px auto;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.summary-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.year-selector {
+  padding: 8px 16px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.year-selector:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #718096;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f7fafc;
+  color: #4a5568;
+}
+
+.loading-state, .error-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #718096;
+}
+
+.error-state button {
+  margin-top: 16px;
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.error-state button:hover {
+  background: #2c5aa0;
+}
+
+/* Summary Content Layout - 3 Column Layout */
+.summary-content {
+  display: grid;
+  grid-template-columns: 320px 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Left Side - Year Overview */
+.year-overview-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.year-overview-section h4 {
+  margin: 0 0 16px 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Year Overview Stats */
+.overview-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overview-card {
+  background: #f7fafc;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.overview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.overview-card.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.overview-card.secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.overview-card.tertiary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.overview-card.quaternary {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
+.card-icon {
+  font-size: 1.5rem;
+  opacity: 0.9;
+}
+
+.card-info h4 {
+  margin: 0 0 6px 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.card-value {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* Middle - Monthly Breakdown */
+.monthly-breakdown-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.monthly-breakdown-section h4 {
+  margin: 0 0 16px 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 12px;
+  height: auto;
+  flex: 1;
+}
+
+.month-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.month-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e0;
+}
+
+.month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.month-name {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.75rem;
+}
+
+.month-change {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.month-change.positive {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.month-change.negative {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.month-change.neutral {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.month-stats {
+  margin-bottom: 12px;
+}
+
+.month-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 2px;
+}
+
+.month-transactions {
+  font-size: 0.65rem;
+  color: #718096;
+}
+
+.month-bar {
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 6px;
+}
+
+.month-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3182ce, #4299e1);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Right Side - Year Insights */
+.year-insights-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.year-insights-section h4 {
+  margin: 0 0 16px 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.insights-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.insight-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.insight-icon {
+  font-size: 1.3rem;
+  color: #3182ce;
+}
+
+.insight-info h6 {
+  margin: 0 0 3px 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.insight-info p {
+  margin: 0 0 3px 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.insight-value {
+  font-size: 0.7rem;
+  color: #3182ce;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .summary-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .year-overview-section {
+    order: 1;
+  }
+  
+  .monthly-breakdown-section {
+    order: 2;
+  }
+  
+  .year-insights-section {
+    order: 3;
+  }
+  
+  .months-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+  }
+  
+  .insights-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .insight-card {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .months-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .yearly-summary-container {
+    padding: 16px;
+    margin: 0 16px 24px 16px;
+  }
+  
+  .summary-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .header-controls {
+    justify-content: space-between;
+  }
+  
+  .months-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  
+  .overview-stats {
+    gap: 12px;
+  }
+  
+  .overview-card {
+    padding: 16px;
+  }
+  
+  .card-value {
+    font-size: 1.25rem;
+  }
+  
+  .insights-grid {
+    flex-direction: column;
+  }
+  
+  .insight-card {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .month-card {
+    min-height: 90px;
+    padding: 12px;
+  }
+  
+  .month-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

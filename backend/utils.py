@@ -1,5 +1,4 @@
 import json
-from calendar import c
 from multiprocessing import process
 
 import cv2
@@ -69,15 +68,3 @@ def run_ocr_only_bytes(file_bytes=None, extension=None):
 def categorize_totals(parsed_invoice):
     categorized = categorize_and_sum_items(parsed_invoice)
     return categorized
-
-
-if __name__ == "__main__":
-    img_path = (
-        input("Enter the path to the image file (or press Enter to use default): ")
-        .strip()
-        .strip('"')
-    )
-    parse_invoice = mistral_ocr_only(img_path)
-    print("Parsed Invoice Data:\n", json.dumps(parse_invoice, indent=2))
-    categorized = categorize_totals(parse_invoice)
-    print("Categorized Totals:\n", json.dumps(categorized, indent=2))
