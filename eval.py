@@ -19,19 +19,32 @@ Usage
 python eval.py --images data/images --gt ground_truth.json
 """
 from __future__ import annotations
-import argparse, json, re, unicodedata, statistics
+
+import argparse
+import base64
+import json
+import logging
+import os
+import re
+import statistics
+import unicodedata
+from collections import Counter, defaultdict
 from pathlib import Path
-from collections import defaultdict, Counter
-import os, base64, cv2, numpy as np, logging
+
+import cv2
+import numpy as np
 
 # ─── import your pipeline ────────────────────────────────────────────────────
 try:
-    from src.ocr import ocr_with_easyocr, preprocess_image, mistral_ocr
-    from src.utils import get_first_page_image
     from src.analyze import parse_invoice
+    from src.ocr import mistral_ocr, ocr_with_easyocr, preprocess_image
+    from src.utils import get_first_page_image
 except ImportError:
-    raise SystemExit("❌  Could not import pipeline modules (src.*). "
-                     "Run from repo root or fix PYTHONPATH.")
+    raise SystemExit(
+        "❌  Could not import pipeline modules (src.*). "
+        "Run from repo root or fix PYTHONPATH."
+    )
+
 
 # ─── OCR wrapper ─────────────────────────────────────────────────────────────
 def mistral_ocr_only(img_path=None):
@@ -48,6 +61,7 @@ def mistral_ocr_only(img_path=None):
     parsed = parse_invoice(mistral_ocr_text)
     return parsed
 
+
 def run_ocr_only(img_path: str | Path) -> dict:
     img_path = Path(img_path)
     if img_path.suffix.lower() == ".pdf":
@@ -60,6 +74,7 @@ def run_ocr_only(img_path: str | Path) -> dict:
     raw_text = ocr_with_easyocr(processed)
     return parse_invoice(raw_text)
 
+
 # ─── helpers ─────────────────────────────────────────────────────────────────
 def normalize(txt) -> str:
     txt = str(txt or "")
@@ -69,17 +84,22 @@ def normalize(txt) -> str:
     txt = re.sub(r"[$,]", "", txt)
     return txt.lower()
 
+
 def flatten_text_dict(d: dict) -> str:
     out = []
     for v in d.values():
         if isinstance(v, list):
             for item in v:
-                out.extend(str(val) for val in (item.values() if isinstance(item, dict) else [item]))
+                out.extend(
+                    str(val)
+                    for val in (item.values() if isinstance(item, dict) else [item])
+                )
         elif isinstance(v, dict):
             out.extend(str(val) for val in v.values())
         else:
             out.append(str(v))
     return normalize(" ".join(out))
+
 
 # ─── ground-truth loader ─────────────────────────────────────────────────────
 def load_gt_json(json_path: Path) -> dict[str, dict]:
@@ -91,19 +111,26 @@ def load_gt_json(json_path: Path) -> dict[str, dict]:
             v["items"].sort(key=lambda x: json.dumps(x, sort_keys=True))
     return data
 
+
 # ─── metrics ────────────────────────────────────────────────────────────────
 MANDATORY_FIELDS = ("vendor", "invoice_total", "invoice_date")
 
+
 def char_error_rate(pred: str, gold: str) -> float:
     import editdistance as ed
+
     return ed.eval(pred, gold) / len(gold) if gold else 0.0
+
 
 def word_accuracy(pred: str, gold: str) -> float:
     p, g = pred.split(), gold.split()
     return sum(a == b for a, b in zip(p, g)) / len(g) if g else 1.0
 
+
 def field_prf(pred: dict, gold: dict) -> dict[str, tuple[float, float, float]]:
-    tp = Counter(); fp = Counter(); fn = Counter()
+    tp = Counter()
+    fp = Counter()
+    fn = Counter()
     for fld in MANDATORY_FIELDS:
         p = normalize(pred.get(fld, ""))
         g = normalize(gold.get(fld, ""))
@@ -112,19 +139,25 @@ def field_prf(pred: dict, gold: dict) -> dict[str, tuple[float, float, float]]:
         if p == g:
             tp[fld] += 1
         elif p:
-            fp[fld] += 1; fn[fld] += 1
+            fp[fld] += 1
+            fn[fld] += 1
         else:
             fn[fld] += 1
     out = {}
     for fld in MANDATORY_FIELDS:
         P = tp[fld] / (tp[fld] + fp[fld] or 1)
         R = tp[fld] / (tp[fld] + fn[fld] or 1)
-        F = 2*P*R / (P+R or 1)
+        F = 2 * P * R / (P + R or 1)
         out[fld] = (P, R, F)
     return out
 
+
 def exact_doc_match(pred: dict, gold: dict) -> bool:
-    return all(normalize(pred.get(f, "")) == normalize(gold.get(f, "")) for f in MANDATORY_FIELDS)
+    return all(
+        normalize(pred.get(f, "")) == normalize(gold.get(f, ""))
+        for f in MANDATORY_FIELDS
+    )
+
 
 # ─── evaluation loop ────────────────────────────────────────────────────────
 def evaluate(gt: dict[str, dict], img_root: Path):
@@ -134,10 +167,10 @@ def evaluate(gt: dict[str, dict], img_root: Path):
     for rel_path, gold in gt.items():
         pred = run_ocr_only(img_root / rel_path)
 
-        charers.append(char_error_rate(flatten_text_dict(pred),
-                                       flatten_text_dict(gold)))
-        worders.append(word_accuracy(flatten_text_dict(pred),
-                                     flatten_text_dict(gold)))
+        charers.append(
+            char_error_rate(flatten_text_dict(pred), flatten_text_dict(gold))
+        )
+        worders.append(word_accuracy(flatten_text_dict(pred), flatten_text_dict(gold)))
         exact.append(exact_doc_match(pred, gold))
 
         for fld, (_, _, F) in field_prf(pred, gold).items():
@@ -150,17 +183,24 @@ def evaluate(gt: dict[str, dict], img_root: Path):
         if field_scores[fld]:
             print(f"{fld:13s} F1 = {statistics.mean(field_scores[fld]):.3f}")
 
+
 # ─── CLI ─────────────────────────────────────────────────────────────────────
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Evaluate receipt-OCR pipeline (JSON GT).")
-    ap.add_argument("--images", type=Path, required=True,
-                    help="Root folder that contains the images referenced in the JSON.")
-    ap.add_argument("--gt", type=Path, required=True,
-                    help="Path to ground-truth JSON file.")
+    ap.add_argument(
+        "--images",
+        type=Path,
+        required=True,
+        help="Root folder that contains the images referenced in the JSON.",
+    )
+    ap.add_argument(
+        "--gt", type=Path, required=True, help="Path to ground-truth JSON file."
+    )
     args = ap.parse_args(argv)
 
     gt = load_gt_json(args.gt)
     evaluate(gt, args.images)
+
 
 if __name__ == "__main__":
     main()
