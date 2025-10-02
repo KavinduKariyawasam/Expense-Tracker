@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { getYearlyStats, getAvailableYears } from '../services/expense';
-import './YearlySummary.css';
+import React, { useState, useEffect } from "react";
+import { getYearlyStats, getAvailableYears } from "../services/expense";
+import "./YearlySummary.css";
 
 const YearlySummary = ({ onClose }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState([]);
   const [yearlyData, setYearlyData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadAvailableYears();
@@ -29,22 +29,22 @@ const YearlySummary = ({ onClose }) => {
         setSelectedYear(response.years[0]);
       }
     } catch (err) {
-      console.error('Error loading available years:', err);
-      setError('Failed to load available years');
+      console.error("Error loading available years:", err);
+      setError("Failed to load available years");
     }
   };
 
   const loadYearlyData = async (year) => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
       const data = await getYearlyStats(year);
       setYearlyData(data);
     } catch (err) {
-      console.error('Error loading yearly data:', err);
-      setError('Failed to load yearly statistics');
+      console.error("Error loading yearly data:", err);
+      setError("Failed to load yearly statistics");
       
-      if (err.message.includes('401')) {
+      if (err.message.includes("401")) {
         // Handle unauthorized access
         localStorage.removeItem("access_token");
         window.location.href = "/login";
@@ -175,8 +175,8 @@ const YearlySummary = ({ onClose }) => {
                     <div className="month-header">
                       <span className="month-name">{month.month_name}</span>
                       {change && (
-                        <span className={`month-change ${change.isPositive ? 'positive' : change.isNegative ? 'negative' : 'neutral'}`}>
-                          {change.isPositive ? '↗' : change.isNegative ? '↘' : '→'} {Math.abs(change.percentage)}%
+                        <span className={`month-change ${change.isPositive ? "positive" : change.isNegative ? "negative" : "neutral"}`}>
+                          {change.isPositive ? "↗" : change.isNegative ? "↘" : "→"} {Math.abs(change.percentage)}%
                         </span>
                       )}
                     </div>
@@ -254,7 +254,7 @@ const YearlySummary = ({ onClose }) => {
                   <p>
                     {yearlyData.year_transactions > 0 
                       ? formatCurrency(yearlyData.year_total / yearlyData.year_transactions)
-                      : 'LKR 0.00'
+                      : "LKR 0.00"
                     }
                   </p>
                   <span className="insight-value">

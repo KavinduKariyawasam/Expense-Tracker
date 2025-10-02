@@ -5,7 +5,7 @@ import AddExpense from "./AddExpense";
 import YearlySummary from "./YearlySummary";
 import Reports from "./Reports";
 import { getDashboardStats, getRecentExpenses, getCurrentUser, updateExpense } from "../services/expense";
-import { EXPENSE_CATEGORIES } from '../constants/categories';
+import { EXPENSE_CATEGORIES } from "../constants/categories";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -24,7 +24,7 @@ export default function Dashboard() {
   const [editingExpenseId, setEditingExpenseId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Load data on component mount
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       // Load user info, dashboard stats, and recent expenses in parallel
       const [userInfo, dashboardStats, recentExpensesData] = await Promise.all([
@@ -58,10 +58,10 @@ export default function Dashboard() {
       setRecentExpenses(recentExpensesData);
 
     } catch (err) {
-      console.error('Error loading dashboard data:', err);
-      setError('Failed to load dashboard data');
+      console.error("Error loading dashboard data:", err);
+      setError("Failed to load dashboard data");
       
-      if (err.message.includes('401')) {
+      if (err.message.includes("401")) {
         // Token expired or invalid, redirect to login
         localStorage.removeItem("access_token");
         navigate("/login");
@@ -95,7 +95,7 @@ export default function Dashboard() {
   const handleEditExpense = (expense) => {
     setEditingExpenseId(expense.id);
     setEditFormData({
-      vendor: expense.vendor || '',
+      vendor: expense.vendor || "",
       description: expense.description,
       amount: expense.amount,
       category: expense.category,
@@ -133,8 +133,8 @@ export default function Dashboard() {
       loadDashboardData();
       
     } catch (err) {
-      console.error('Error updating expense:', err);
-      alert('Failed to update expense: ' + (err.message || 'Unknown error'));
+      console.error("Error updating expense:", err);
+      alert("Failed to update expense: " + (err.message || "Unknown error"));
     }
   };
 
@@ -153,10 +153,10 @@ export default function Dashboard() {
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
     });
   };
 
@@ -203,7 +203,7 @@ export default function Dashboard() {
           )}
 
           {/* Add Expense Section */}
-          {activeView === 'addExpense' && (
+          {activeView === "addExpense" && (
             <AddExpense 
               onExpenseAdded={handleExpenseAdded}
               onClose={() => setActiveView(null)}
@@ -211,14 +211,14 @@ export default function Dashboard() {
           )}
 
           {/* Yearly Summary Section */}
-          {activeView === 'yearlySummary' && (
+          {activeView === "yearlySummary" && (
             <YearlySummary 
               onClose={() => setActiveView(null)}
             />
           )}
 
           {/* Reports Section */}
-          {activeView === 'reports' && (
+          {activeView === "reports" && (
             <Reports 
               onClose={() => setActiveView(null)}
             />
@@ -266,28 +266,28 @@ export default function Dashboard() {
               onClick={() => setShowBillUpload(!showBillUpload)}
             >
               <span className="btn-icon">📄</span>
-              {showBillUpload ? 'Hide' : 'Upload Bill'}
+              {showBillUpload ? "Hide" : "Upload Bill"}
             </button>
             <button 
               className="action-btn secondary"
-              onClick={() => setActiveView(activeView === 'addExpense' ? null : 'addExpense')}
+              onClick={() => setActiveView(activeView === "addExpense" ? null : "addExpense")}
             >
               <span className="btn-icon">➕</span>
-              {activeView === 'addExpense' ? 'Hide' : 'Add Expense'}
+              {activeView === "addExpense" ? "Hide" : "Add Expense"}
             </button>
             <button 
               className="action-btn tertiary"
-              onClick={() => setActiveView(activeView === 'yearlySummary' ? null : 'yearlySummary')}
+              onClick={() => setActiveView(activeView === "yearlySummary" ? null : "yearlySummary")}
             >
               <span className="btn-icon">📊</span>
-              {activeView === 'yearlySummary' ? 'Hide' : 'Yearly Summary'}
+              {activeView === "yearlySummary" ? "Hide" : "Yearly Summary"}
             </button>
             <button 
               className="action-btn quaternary"
-              onClick={() => setActiveView(activeView === 'reports' ? null : 'reports')}
+              onClick={() => setActiveView(activeView === "reports" ? null : "reports")}
             >
               <span className="btn-icon">📈</span>
-              {activeView === 'reports' ? 'Hide' : 'View Reports'}
+              {activeView === "reports" ? "Hide" : "View Reports"}
             </button>
           </div>
 
@@ -295,7 +295,7 @@ export default function Dashboard() {
           <div className="recent-expenses">
             <div className="section-header">
               <h2>Recent Expenses</h2>
-              <button className="view-all-btn" onClick={() => navigate('/expenses')}>View All</button>
+              <button className="view-all-btn" onClick={() => navigate("/expenses")}>View All</button>
             </div>
             
             <div className="expenses-list">
@@ -314,14 +314,14 @@ export default function Dashboard() {
                             type="text"
                             placeholder="Vendor"
                             value={editFormData.vendor}
-                            onChange={(e) => handleEditFormChange('vendor', e.target.value)}
+                            onChange={(e) => handleEditFormChange("vendor", e.target.value)}
                             className="edit-input vendor-input"
                           />
                           <input
                             type="text"
                             placeholder="Description"
                             value={editFormData.description}
-                            onChange={(e) => handleEditFormChange('description', e.target.value)}
+                            onChange={(e) => handleEditFormChange("description", e.target.value)}
                             className="edit-input description-input"
                             required
                           />
@@ -331,7 +331,7 @@ export default function Dashboard() {
                             type="number"
                             placeholder="Amount"
                             value={editFormData.amount}
-                            onChange={(e) => handleEditFormChange('amount', e.target.value)}
+                            onChange={(e) => handleEditFormChange("amount", e.target.value)}
                             className="edit-input amount-input"
                             step="0.01"
                             min="0"
@@ -339,7 +339,7 @@ export default function Dashboard() {
                           />
                           <select
                             value={editFormData.category}
-                            onChange={(e) => handleEditFormChange('category', e.target.value)}
+                            onChange={(e) => handleEditFormChange("category", e.target.value)}
                             className="edit-input category-input"
                           >
                             {EXPENSE_CATEGORIES.map(category => (
@@ -351,7 +351,7 @@ export default function Dashboard() {
                           <input
                             type="date"
                             value={editFormData.expense_date}
-                            onChange={(e) => handleEditFormChange('expense_date', e.target.value)}
+                            onChange={(e) => handleEditFormChange("expense_date", e.target.value)}
                             className="edit-input date-input"
                             required
                           />
@@ -379,7 +379,7 @@ export default function Dashboard() {
                           <h4 className="expense-description">
                             {expense.vendor ? `${expense.vendor} - ${expense.description}` : expense.description}
                           </h4>
-                          <span className="expense-category">{expense.category || 'Uncategorized'}</span>
+                          <span className="expense-category">{expense.category || "Uncategorized"}</span>
                         </div>
                         <div className="expense-details">
                           <span className="expense-amount">-{formatCurrency(expense.amount)}</span>

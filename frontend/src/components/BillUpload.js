@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import EditableBillTable from './EditableBillTable';
-import './BillUpload.css';
-import { saveBillExpenses } from '../services/expense';
+import React, { useState } from "react";
+import EditableBillTable from "./EditableBillTable";
+import "./BillUpload.css";
+import { saveBillExpenses } from "../services/expense";
 
 export default function BillUpload({ onUploadSuccess }) {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showEditTable, setShowEditTable] = useState(false);
 
   const handleFileSelect = (selectedFile) => {
-    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
     if (selectedFile && validTypes.includes(selectedFile.type)) {
       setFile(selectedFile);
-      setError('');
+      setError("");
     } else {
-      setError('Please select a valid image (PNG, JPG, JPEG) or PDF file');
+      setError("Please select a valid image (PNG, JPG, JPEG) or PDF file");
       setFile(null);
     }
   };
@@ -46,25 +46,25 @@ export default function BillUpload({ onUploadSuccess }) {
     if (!file) return;
 
     setUploading(true);
-    setError('');
+    setError("");
     setResult(null);
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     // Get authentication token
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (!token) {
-      setError('Please log in to upload bills');
+      setError("Please log in to upload bills");
       setUploading(false);
       return;
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/upload-bill', {
-        method: 'POST',
+      const response = await fetch("http://127.0.0.1:8000/upload-bill", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
           // Don't set Content-Type for FormData, let the browser set it
         },
         body: formData,
@@ -77,16 +77,16 @@ export default function BillUpload({ onUploadSuccess }) {
         setShowEditTable(true); // Show editable table immediately
       } else {
         if (response.status === 401) {
-          setError('Session expired. Please log in again.');
+          setError("Session expired. Please log in again.");
           // Optionally redirect to login
           // window.location.href = '/login';
         } else {
-          setError(data.detail || 'Upload failed');
+          setError(data.detail || "Upload failed");
         }
       }
     } catch (err) {
-      console.error('Upload error:', err);
-      setError('Network error. Please try again.');
+      console.error("Upload error:", err);
+      setError("Network error. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -94,11 +94,11 @@ export default function BillUpload({ onUploadSuccess }) {
 
   const handleSaveExpenses = async (editedData) => {
     try {
-      console.log('Saving expenses to database:', editedData);
+      console.log("Saving expenses to database:", editedData);
       
       // Save to database
       const savedExpenses = await saveBillExpenses(editedData);
-      console.log('Expenses saved successfully:', savedExpenses);
+      console.log("Expenses saved successfully:", savedExpenses);
       
       if (onUploadSuccess) {
         onUploadSuccess(savedExpenses);
@@ -106,11 +106,11 @@ export default function BillUpload({ onUploadSuccess }) {
       
       // Show success message with details
       const itemCount = editedData.items.length;
-      alert(`Successfully saved ${itemCount} expense${itemCount !== 1 ? 's' : ''}!`);
+      alert(`Successfully saved ${itemCount} expense${itemCount !== 1 ? "s" : ""}!`);
       resetUpload();
     } catch (error) {
-      console.error('Error saving expenses:', error);
-      if (error.message.includes('401')) {
+      console.error("Error saving expenses:", error);
+      if (error.message.includes("401")) {
         alert("Session expired. Please log in again.");
       } else {
         alert("Failed to save expenses. Please try again.");
@@ -123,13 +123,13 @@ export default function BillUpload({ onUploadSuccess }) {
     setShowEditTable(false);
     setResult(null);
     setFile(null);
-    setError('');
+    setError("");
   };
 
   const resetUpload = () => {
     setFile(null);
     setResult(null);
-    setError('');
+    setError("");
     setShowEditTable(false);
   };
 
@@ -149,7 +149,7 @@ export default function BillUpload({ onUploadSuccess }) {
           </div>
 
           <div 
-            className={`upload-zone ${dragOver ? 'drag-over' : ''}`}
+            className={`upload-zone ${dragOver ? "drag-over" : ""}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -191,7 +191,7 @@ export default function BillUpload({ onUploadSuccess }) {
               disabled={uploading}
               className="upload-button"
             >
-              {uploading ? '🔄 Processing...' : '🚀 Upload & Parse'}
+              {uploading ? "🔄 Processing..." : "🚀 Upload & Parse"}
             </button>
           )}
         </>

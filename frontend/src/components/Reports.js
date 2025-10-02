@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { getExpenses, getYearlyStats, getAvailableYears } from '../services/expense';
-import { EXPENSE_CATEGORIES } from '../constants/categories';
-import './Reports.css';
+import React, { useState, useEffect } from "react";
+import { getExpenses, getYearlyStats, getAvailableYears } from "../services/expense";
+import { EXPENSE_CATEGORIES } from "../constants/categories";
+import "./Reports.css";
 
 const Reports = ({ onClose }) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [expenses, setExpenses] = useState([]);
-  const [selectedPeriod, setSelectedPeriod] = useState('this-year');
+  const [selectedPeriod, setSelectedPeriod] = useState("this-year");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState([]);
   const [reportData, setReportData] = useState(null);
@@ -37,8 +37,8 @@ const Reports = ({ onClose }) => {
         setSelectedYear(yearsData.years[0]);
       }
     } catch (err) {
-      console.error('Error loading data:', err);
-      setError('Failed to load expense data');
+      console.error("Error loading data:", err);
+      setError("Failed to load expense data");
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ const Reports = ({ onClose }) => {
     const now = new Date();
     
     switch (selectedPeriod) {
-      case 'this-month':
+      case "this-month":
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         return expenses.filter(exp => {
@@ -75,7 +75,7 @@ const Reports = ({ onClose }) => {
           return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
         });
         
-      case 'last-month':
+      case "last-month":
         const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
         return expenses.filter(exp => {
           const expDate = new Date(exp.expense_date);
@@ -83,16 +83,16 @@ const Reports = ({ onClose }) => {
                  expDate.getFullYear() === lastMonth.getFullYear();
         });
         
-      case 'last-3-months':
+      case "last-3-months":
         const threeMonthsAgo = new Date(now.setMonth(now.getMonth() - 3));
         return expenses.filter(exp => new Date(exp.expense_date) >= threeMonthsAgo);
         
-      case 'this-year':
+      case "this-year":
         return expenses.filter(exp => 
           new Date(exp.expense_date).getFullYear() === new Date().getFullYear()
         );
         
-      case 'custom-year':
+      case "custom-year":
         return expenses.filter(exp => 
           new Date(exp.expense_date).getFullYear() === selectedYear
         );
@@ -114,7 +114,7 @@ const Reports = ({ onClose }) => {
     });
 
     expenses.forEach(expense => {
-      const category = expense.category || 'Others';
+      const category = expense.category || "Others";
       if (categoryData[category]) {
         categoryData[category].total += expense.amount;
         categoryData[category].count += 1;
@@ -141,11 +141,11 @@ const Reports = ({ onClose }) => {
     
     expenses.forEach(expense => {
       const date = new Date(expense.expense_date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       
       if (!monthlyData[monthKey]) {
         monthlyData[monthKey] = {
-          month: date.toLocaleString('default', { month: 'long', year: 'numeric' }),
+          month: date.toLocaleString("default", { month: "long", year: "numeric" }),
           total: 0,
           count: 0
         };
@@ -188,12 +188,12 @@ const Reports = ({ onClose }) => {
 
   const getPeriodLabel = () => {
     switch (selectedPeriod) {
-      case 'this-month': return 'This Month';
-      case 'last-month': return 'Last Month';
-      case 'last-3-months': return 'Last 3 Months';
-      case 'this-year': return 'This Year';
-      case 'custom-year': return `Year ${selectedYear}`;
-      default: return 'All Time';
+      case "this-month": return "This Month";
+      case "last-month": return "Last Month";
+      case "last-3-months": return "Last 3 Months";
+      case "this-year": return "This Year";
+      case "custom-year": return `Year ${selectedYear}`;
+      default: return "All Time";
     }
   };
 
@@ -247,7 +247,7 @@ const Reports = ({ onClose }) => {
             <option value="custom-year">Custom Year</option>
           </select>
           
-          {selectedPeriod === 'custom-year' && (
+          {selectedPeriod === "custom-year" && (
             <select 
               value={selectedYear} 
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
