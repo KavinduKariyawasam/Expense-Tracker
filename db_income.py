@@ -1,4 +1,5 @@
 import os
+
 import psycopg2
 from dotenv import load_dotenv
 
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS income_items (
 );
 """
 
+
 def create_tables():
     try:
         # Connect to the PostgreSQL database
@@ -47,7 +49,7 @@ def create_tables():
             port=DB_PORT,
             database=DB_NAME,
             user=DB_USER,
-            password=DB_PASSWORD
+            password=DB_PASSWORD,
         )
         cursor = connection.cursor()
 
@@ -66,6 +68,7 @@ def create_tables():
         if connection:
             cursor.close()
             connection.close()
+
 
 if __name__ == "__main__":
     create_tables()

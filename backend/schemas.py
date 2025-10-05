@@ -127,7 +127,7 @@ class IncomeCreate(BaseModel):
     amount: float
     category: Optional[str] = None
     income_date: date
-    items: Optional[List['IncomeItemCreate']] = []
+    items: Optional[List["IncomeItemCreate"]] = []
 
     @validator("amount")
     def validate_amount(cls, v):
