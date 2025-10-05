@@ -1,8 +1,10 @@
+import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Register from "./components/Register";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Expenses from "./components/Expenses";
+import Income from "./components/Income";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -25,6 +27,14 @@ function App() {
           element={
             <PrivateRoute>
               <Expenses />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/income"
+          element={
+            <PrivateRoute>
+              <Income />
             </PrivateRoute>
           }
         />

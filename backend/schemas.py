@@ -93,6 +93,73 @@ class ExpenseUpdate(BaseModel):
     expense_date: Optional[date] = None
 
 
+# Income Item schemas
+class IncomeItemCreate(BaseModel):
+    description: str
+    quantity: float = 1.0
+    unit_price: float
+    line_total: float
+    category: Optional[str] = "Others"
+
+    @validator("quantity", "unit_price", "line_total")
+    def validate_decimals(cls, v):
+        if v is None:
+            return 0.0
+        return round(float(v), 2)
+
+
+class IncomeItemOut(BaseModel):
+    id: int
+    description: str
+    quantity: float
+    unit_price: float
+    line_total: float
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Income schemas
+class IncomeCreate(BaseModel):
+    source: Optional[str] = None
+    description: str
+    amount: float
+    category: Optional[str] = None
+    income_date: date
+    items: Optional[List['IncomeItemCreate']] = []
+
+    @validator("amount")
+    def validate_amount(cls, v):
+        if v is None:
+            return 0.0
+        return round(float(v), 2)
+
+
+class IncomeOut(BaseModel):
+    id: int
+    user_id: int
+    source: Optional[str]
+    description: str
+    amount: float
+    category: Optional[str]
+    income_date: date
+    created_at: datetime
+    updated_at: datetime
+    items: List[IncomeItemOut] = []
+
+    class Config:
+        from_attributes = True
+
+
+class IncomeUpdate(BaseModel):
+    source: Optional[str] = None
+    description: Optional[str] = None
+    amount: Optional[float] = None
+    category: Optional[str] = None
+    income_date: Optional[date] = None
+
+
 # Bill processing schema
 class BillData(BaseModel):
     vendor: str
@@ -105,3 +172,7 @@ class BillData(BaseModel):
         if v is None:
             return 0.0
         return round(float(v), 2)
+
+
+# Update forward references
+IncomeCreate.update_forward_refs()

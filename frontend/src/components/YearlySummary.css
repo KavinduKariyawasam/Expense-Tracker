@@ -64,7 +64,8 @@
   color: #4a5568;
 }
 
-.loading-state, .error-state {
+.loading-state,
+.error-state {
   text-align: center;
   padding: 48px 24px;
   color: #718096;
@@ -169,6 +170,14 @@
   font-weight: 700;
 }
 
+.card-value.positive {
+  color: #38a169;
+}
+
+.card-value.negative {
+  color: #e53e3e;
+}
+
 /* Middle - Monthly Breakdown */
 .monthly-breakdown-section {
   flex: 1;
@@ -250,6 +259,34 @@
 
 .month-stats {
   margin-bottom: 12px;
+}
+
+.month-income {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #38a169;
+  margin-bottom: 2px;
+}
+
+.month-expense {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #e53e3e;
+  margin-bottom: 2px;
+}
+
+.month-net {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.month-net.positive {
+  color: #38a169;
+}
+
+.month-net.negative {
+  color: #e53e3e;
 }
 
 .month-amount {
@@ -348,30 +385,30 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  
+
   .year-overview-section {
     order: 1;
   }
-  
+
   .monthly-breakdown-section {
     order: 2;
   }
-  
+
   .year-insights-section {
     order: 3;
   }
-  
+
   .months-grid {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(4, 1fr);
   }
-  
+
   .insights-grid {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 16px;
   }
-  
+
   .insight-card {
     flex: 1;
     min-width: 200px;
@@ -390,38 +427,38 @@
     padding: 16px;
     margin: 0 16px 24px 16px;
   }
-  
+
   .summary-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .header-controls {
     justify-content: space-between;
   }
-  
+
   .months-grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;
   }
-  
+
   .overview-stats {
     gap: 12px;
   }
-  
+
   .overview-card {
     padding: 16px;
   }
-  
+
   .card-value {
     font-size: 1.25rem;
   }
-  
+
   .insights-grid {
     flex-direction: column;
   }
-  
+
   .insight-card {
     min-width: auto;
   }
@@ -432,7 +469,7 @@
     min-height: 90px;
     padding: 12px;
   }
-  
+
   .month-header {
     flex-direction: column;
     align-items: flex-start;

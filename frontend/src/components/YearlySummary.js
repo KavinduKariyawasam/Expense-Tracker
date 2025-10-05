@@ -23,7 +23,7 @@ const YearlySummary = ({ onClose }) => {
     try {
       const response = await getAvailableYears();
       setAvailableYears(response.years);
-      
+
       // Set the most recent year as default if available
       if (response.years.length > 0) {
         setSelectedYear(response.years[0]);
@@ -43,7 +43,7 @@ const YearlySummary = ({ onClose }) => {
     } catch (err) {
       console.error("Error loading yearly data:", err);
       setError("Failed to load yearly statistics");
-      
+
       if (err.message.includes("401")) {
         // Handle unauthorized access
         localStorage.removeItem("access_token");
@@ -59,17 +59,23 @@ const YearlySummary = ({ onClose }) => {
   };
 
   const formatCurrency = (amount) => {
-    return `LKR ${amount.toFixed(2)}`;
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return "LKR 0.00";
+    }
+    return `LKR ${Number(amount).toFixed(2)}`;
   };
 
   const getMonthlyChange = (currentMonth, previousMonth) => {
-    if (!previousMonth.total) return null;
-    
-    const change = ((currentMonth.total - previousMonth.total) / previousMonth.total) * 100;
+    if (!previousMonth.net_total) return null;
+
+    const change =
+      ((currentMonth.net_total - previousMonth.net_total) /
+        Math.abs(previousMonth.net_total)) *
+      100;
     return {
       percentage: change.toFixed(1),
       isPositive: change > 0,
-      isNegative: change < 0
+      isNegative: change < 0,
     };
   };
 
@@ -78,7 +84,9 @@ const YearlySummary = ({ onClose }) => {
       <div className="yearly-summary-container">
         <div className="summary-header">
           <h3>📊 Yearly Summary</h3>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
         </div>
         <div className="loading-state">
           <p>Loading yearly statistics...</p>
@@ -92,7 +100,9 @@ const YearlySummary = ({ onClose }) => {
       <div className="yearly-summary-container">
         <div className="summary-header">
           <h3>📊 Yearly Summary</h3>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
         </div>
         <div className="error-state">
           <p>{error}</p>
@@ -107,18 +117,20 @@ const YearlySummary = ({ onClose }) => {
       <div className="summary-header">
         <h3>📊 Yearly Summary</h3>
         <div className="header-controls">
-          <select 
-            value={selectedYear} 
+          <select
+            value={selectedYear}
             onChange={handleYearChange}
             className="year-selector"
           >
-            {availableYears.map(year => (
+            {availableYears.map((year) => (
               <option key={year} value={year}>
                 {year}
               </option>
             ))}
           </select>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
         </div>
       </div>
 
@@ -131,32 +143,45 @@ const YearlySummary = ({ onClose }) => {
               <div className="overview-card primary">
                 <div className="card-icon">💰</div>
                 <div className="card-info">
-                  <h4>Total Expenses</h4>
-                  <p className="card-value">{formatCurrency(yearlyData.year_total)}</p>
+                  <h4>Total Income</h4>
+                  <p className="card-value">
+                    {formatCurrency(yearlyData.year_income_total)}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="overview-card secondary">
-                <div className="card-icon">📊</div>
+                <div className="card-icon">�</div>
                 <div className="card-info">
-                  <h4>Average Monthly</h4>
-                  <p className="card-value">{formatCurrency(yearlyData.avg_monthly)}</p>
+                  <h4>Total Expenses</h4>
+                  <p className="card-value">
+                    {formatCurrency(yearlyData.year_expense_total)}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="overview-card tertiary">
+                <div className="card-icon">�</div>
+                <div className="card-info">
+                  <h4>Net Worth</h4>
+                  <p
+                    className={`card-value ${
+                      yearlyData.year_net_total >= 0 ? "positive" : "negative"
+                    }`}
+                  >
+                    {formatCurrency(yearlyData.year_net_total)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="overview-card quaternary">
                 <div className="card-icon">📈</div>
                 <div className="card-info">
                   <h4>Transactions</h4>
-                  <p className="card-value">{yearlyData.year_transactions}</p>
-                </div>
-              </div>
-              
-              <div className="overview-card quaternary">
-                <div className="card-icon">🏷️</div>
-                <div className="card-info">
-                  <h4>Categories</h4>
-                  <p className="card-value">{yearlyData.year_categories}</p>
+                  <p className="card-value">
+                    {(yearlyData.year_expense_transactions || 0) +
+                      (yearlyData.year_income_transactions || 0)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -167,28 +192,66 @@ const YearlySummary = ({ onClose }) => {
             <h4>Monthly Breakdown</h4>
             <div className="months-grid">
               {yearlyData.monthly_breakdown.map((month, index) => {
-                const previousMonth = index > 0 ? yearlyData.monthly_breakdown[index - 1] : null;
-                const change = previousMonth ? getMonthlyChange(month, previousMonth) : null;
-                
+                const previousMonth =
+                  index > 0 ? yearlyData.monthly_breakdown[index - 1] : null;
+                const change = previousMonth
+                  ? getMonthlyChange(month, previousMonth)
+                  : null;
+
                 return (
                   <div key={month.month} className="month-card">
                     <div className="month-header">
                       <span className="month-name">{month.month_name}</span>
                       {change && (
-                        <span className={`month-change ${change.isPositive ? "positive" : change.isNegative ? "negative" : "neutral"}`}>
-                          {change.isPositive ? "↗" : change.isNegative ? "↘" : "→"} {Math.abs(change.percentage)}%
+                        <span
+                          className={`month-change ${
+                            change.isPositive
+                              ? "positive"
+                              : change.isNegative
+                              ? "negative"
+                              : "neutral"
+                          }`}
+                        >
+                          {change.isPositive
+                            ? "↗"
+                            : change.isNegative
+                            ? "↘"
+                            : "→"}{" "}
+                          {Math.abs(change.percentage)}%
                         </span>
                       )}
                     </div>
                     <div className="month-stats">
-                      <div className="month-amount">{formatCurrency(month.total)}</div>
-                      <div className="month-transactions">{month.transactions} transactions</div>
+                      <div className="month-income">
+                        +{formatCurrency(month.income_total)}
+                      </div>
+                      <div className="month-expense">
+                        -{formatCurrency(month.expense_total)}
+                      </div>
+                      <div
+                        className={`month-net ${
+                          month.net_total >= 0 ? "positive" : "negative"
+                        }`}
+                      >
+                        Net: {formatCurrency(month.net_total)}
+                      </div>
+                      <div className="month-transactions">
+                        {(month.income_transactions || 0) +
+                          (month.expense_transactions || 0)}{" "}
+                        transactions
+                      </div>
                     </div>
                     <div className="month-bar">
-                      <div 
+                      <div
                         className="month-bar-fill"
                         style={{
-                          width: `${yearlyData.year_total > 0 ? (month.total / yearlyData.year_total) * 100 : 0}%`
+                          width: `${
+                            yearlyData.year_expense_total > 0
+                              ? (month.expense_total /
+                                  yearlyData.year_expense_total) *
+                                100
+                              : 0
+                          }%`,
                         }}
                       ></div>
                     </div>
@@ -203,62 +266,82 @@ const YearlySummary = ({ onClose }) => {
             <h4>Year Insights</h4>
             <div className="insights-grid">
               <div className="insight-card">
-                <div className="insight-icon">🤑</div>
-                <div className="insight-info">
-                  <h6>Most Expensive Month</h6>
-                  <p>
-                    {yearlyData.monthly_breakdown.reduce((max, month) => 
-                      month.total > max.total ? month : max
-                    ).month_name}
-                  </p>
-                  <span className="insight-value">
-                    {formatCurrency(Math.max(...yearlyData.monthly_breakdown.map(m => m.total)))}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="insight-card">
-                <div className="insight-icon">💡</div>
-                <div className="insight-info">
-                  <h6>Most Active Month</h6>
-                  <p>
-                    {yearlyData.monthly_breakdown.reduce((max, month) => 
-                      month.transactions > max.transactions ? month : max
-                    ).month_name}
-                  </p>
-                  <span className="insight-value">
-                    {Math.max(...yearlyData.monthly_breakdown.map(m => m.transactions))} transactions
-                  </span>
-                </div>
-              </div>
-
-              <div className="insight-card">
-                <div className="insight-icon">📉</div>
-                <div className="insight-info">
-                  <h6>Lowest Spending Month</h6>
-                  <p>
-                    {yearlyData.monthly_breakdown.reduce((min, month) => 
-                      month.total < min.total ? month : min
-                    ).month_name}
-                  </p>
-                  <span className="insight-value">
-                    {formatCurrency(Math.min(...yearlyData.monthly_breakdown.map(m => m.total)))}
-                  </span>
-                </div>
-              </div>
-
-              <div className="insight-card">
                 <div className="insight-icon">💸</div>
                 <div className="insight-info">
-                  <h6>Average Transaction</h6>
+                  <h6>Highest Expense Month</h6>
                   <p>
-                    {yearlyData.year_transactions > 0 
-                      ? formatCurrency(yearlyData.year_total / yearlyData.year_transactions)
-                      : "LKR 0.00"
+                    {
+                      yearlyData.monthly_breakdown.reduce((max, month) =>
+                        month.expense_total > max.expense_total ? month : max
+                      ).month_name
                     }
                   </p>
                   <span className="insight-value">
-                    per transaction
+                    {formatCurrency(
+                      Math.max(
+                        ...yearlyData.monthly_breakdown.map(
+                          (m) => m.expense_total
+                        )
+                      )
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <div className="insight-card">
+                <div className="insight-icon">�</div>
+                <div className="insight-info">
+                  <h6>Highest Income Month</h6>
+                  <p>
+                    {
+                      yearlyData.monthly_breakdown.reduce((max, month) =>
+                        month.income_total > max.income_total ? month : max
+                      ).month_name
+                    }
+                  </p>
+                  <span className="insight-value">
+                    {formatCurrency(
+                      Math.max(
+                        ...yearlyData.monthly_breakdown.map(
+                          (m) => m.income_total
+                        )
+                      )
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <div className="insight-card">
+                <div className="insight-icon">�</div>
+                <div className="insight-info">
+                  <h6>Best Net Month</h6>
+                  <p>
+                    {
+                      yearlyData.monthly_breakdown.reduce((max, month) =>
+                        month.net_total > max.net_total ? month : max
+                      ).month_name
+                    }
+                  </p>
+                  <span className="insight-value">
+                    {formatCurrency(
+                      Math.max(
+                        ...yearlyData.monthly_breakdown.map((m) => m.net_total)
+                      )
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <div className="insight-card">
+                <div className="insight-icon">�</div>
+                <div className="insight-info">
+                  <h6>Average Monthly</h6>
+                  <p>
+                    Income: {formatCurrency(yearlyData.avg_monthly_income || 0)}
+                  </p>
+                  <span className="insight-value">
+                    Expense:{" "}
+                    {formatCurrency(yearlyData.avg_monthly_expense || 0)}
                   </span>
                 </div>
               </div>

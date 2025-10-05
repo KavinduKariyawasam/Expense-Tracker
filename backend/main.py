@@ -9,7 +9,8 @@ from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from psycopg2 import sql
-from schemas import (BillData, ExpenseCreate, ExpenseOut, ExpenseUpdate, Token,
+from schemas import (BillData, ExpenseCreate, ExpenseOut, ExpenseUpdate, 
+                     IncomeCreate, IncomeOut, IncomeUpdate, Token,
                      UserCreate, UserOut)
 from security import create_access_token, get_password_hash, verify_password
 from utils import run_ocr_only_bytes
@@ -323,6 +324,248 @@ def delete_expense(
         raise HTTPException(status_code=500, detail="Failed to delete expense")
 
 
+# Income endpoints
+@app.post("/income", response_model=IncomeOut)
+def create_income(
+    income: IncomeCreate, db=Depends(get_db), current_user=Depends(get_current_user)
+):
+    """Create a new income"""
+    try:
+        # Insert income
+        db.execute(
+            """
+            INSERT INTO income (user_id, source, description, amount, category, income_date) 
+            VALUES (%s, %s, %s, %s, %s, %s) 
+            RETURNING id, user_id, source, description, amount, category, income_date, created_at, updated_at
+        """,
+            (
+                current_user["id"],
+                income.source,
+                income.description,
+                income.amount,
+                income.category,
+                income.income_date,
+            ),
+        )
+
+        new_income = db.fetchone()
+        income_id = new_income["id"]
+
+        # Insert income items if provided
+        items = []
+        if income.items:
+            for item in income.items:
+                db.execute(
+                    """
+                    INSERT INTO income_items (income_id, description, quantity, unit_price, line_total) 
+                    VALUES (%s, %s, %s, %s, %s) 
+                    RETURNING id, description, quantity, unit_price, line_total, created_at
+                """,
+                    (
+                        income_id,
+                        item.description,
+                        item.quantity,
+                        item.unit_price,
+                        item.line_total,
+                    ),
+                )
+                items.append(db.fetchone())
+
+        # Return income with items
+        return {**new_income, "items": items}
+
+    except Exception as e:
+        logger.error(f"Error creating income: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create income")
+
+
+@app.get("/income", response_model=List[IncomeOut])
+def get_income(
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+):
+    """Get user's income"""
+    try:
+        # Get income
+        db.execute(
+            """
+            SELECT id, user_id, source, description, amount, category, income_date, created_at, updated_at 
+            FROM income 
+            WHERE user_id = %s 
+            ORDER BY income_date DESC, created_at DESC 
+            LIMIT %s OFFSET %s
+        """,
+            (current_user["id"], limit, skip),
+        )
+
+        income_records = db.fetchall()
+
+        # Get items for each income
+        result = []
+        for income_record in income_records:
+            db.execute(
+                """
+                SELECT id, description, quantity, unit_price, line_total, created_at 
+                FROM income_items 
+                WHERE income_id = %s
+            """,
+                (income_record["id"],),
+            )
+            items = db.fetchall()
+            result.append({**income_record, "items": items})
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Error getting income: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get income")
+
+
+@app.get("/income/{income_id}", response_model=IncomeOut)
+def get_income_by_id(
+    income_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
+):
+    """Get specific income"""
+    try:
+        # Get income
+        db.execute(
+            """
+            SELECT id, user_id, source, description, amount, category, income_date, created_at, updated_at 
+            FROM income 
+            WHERE id = %s AND user_id = %s
+        """,
+            (income_id, current_user["id"]),
+        )
+
+        income_record = db.fetchone()
+        if not income_record:
+            raise HTTPException(status_code=404, detail="Income not found")
+
+        # Get items
+        db.execute(
+            """
+            SELECT id, description, quantity, unit_price, line_total, created_at 
+            FROM income_items 
+            WHERE income_id = %s
+        """,
+            (income_id,),
+        )
+        items = db.fetchall()
+
+        return {**income_record, "items": items}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting income: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get income")
+
+
+@app.put("/income/{income_id}", response_model=IncomeOut)
+def update_income(
+    income_id: int,
+    income: IncomeUpdate,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Update income"""
+    try:
+        # Check if income exists and belongs to user
+        db.execute(
+            "SELECT id FROM income WHERE id = %s AND user_id = %s",
+            (income_id, current_user["id"]),
+        )
+        if not db.fetchone():
+            raise HTTPException(status_code=404, detail="Income not found")
+
+        # Build update query dynamically
+        updates = []
+        values = []
+
+        if income.source is not None:
+            updates.append("source = %s")
+            values.append(income.source)
+        if income.description is not None:
+            updates.append("description = %s")
+            values.append(income.description)
+        if income.amount is not None:
+            updates.append("amount = %s")
+            values.append(income.amount)
+        if income.category is not None:
+            updates.append("category = %s")
+            values.append(income.category)
+        if income.income_date is not None:
+            updates.append("income_date = %s")
+            values.append(income.income_date)
+
+        if not updates:
+            # If no updates, just return current income
+            return get_income_by_id(income_id, db, current_user)
+
+        values.append(income_id)
+        values.append(current_user["id"])
+
+        update_query = f"""
+            UPDATE income 
+            SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = %s AND user_id = %s 
+            RETURNING id, user_id, source, description, amount, category, income_date, created_at, updated_at
+        """
+
+        db.execute(update_query, values)
+        updated_income = db.fetchone()
+
+        # Get items
+        db.execute(
+            """
+            SELECT id, description, quantity, unit_price, line_total, created_at 
+            FROM income_items 
+            WHERE income_id = %s
+        """,
+            (income_id,),
+        )
+        items = db.fetchall()
+
+        return {**updated_income, "items": items}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating income: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update income")
+
+
+@app.delete("/income/{income_id}")
+def delete_income(
+    income_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
+):
+    """Delete income"""
+    try:
+        # Check if income exists and belongs to user
+        db.execute(
+            "SELECT id FROM income WHERE id = %s AND user_id = %s",
+            (income_id, current_user["id"]),
+        )
+        if not db.fetchone():
+            raise HTTPException(status_code=404, detail="Income not found")
+
+        # Delete income (items will be deleted by cascade)
+        db.execute(
+            "DELETE FROM income WHERE id = %s AND user_id = %s",
+            (income_id, current_user["id"]),
+        )
+
+        return {"message": "Income deleted successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting income: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete income")
+
+
 @app.post("/upload-bill")
 async def upload_bill(
     file: UploadFile = File(...),
@@ -461,56 +704,112 @@ def get_dashboard_stats(db=Depends(get_db), current_user=Depends(get_current_use
         db.execute(
             """
             SELECT COALESCE(SUM(amount), 0) as total_expenses,
-                   COUNT(*) as total_transactions
+                   COUNT(*) as total_expense_transactions
             FROM expenses 
             WHERE user_id = %s
         """,
             (user_id,),
         )
-        total_result = db.fetchone()
+        expense_result = db.fetchone()
+
+        # Total income
+        db.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0) as total_income,
+                   COUNT(*) as total_income_transactions
+            FROM income 
+            WHERE user_id = %s
+        """,
+            (user_id,),
+        )
+        income_result = db.fetchone()
 
         # Monthly expenses (current month)
         current_month = datetime.now().replace(day=1)
         db.execute(
             """
             SELECT COALESCE(SUM(amount), 0) as monthly_expenses,
-                   COUNT(*) as monthly_transactions
+                   COUNT(*) as monthly_expense_transactions
             FROM expenses 
             WHERE user_id = %s AND expense_date >= %s
         """,
             (user_id, current_month.date()),
         )
-        monthly_result = db.fetchone()
+        monthly_expense_result = db.fetchone()
+
+        # Monthly income (current month)
+        db.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0) as monthly_income,
+                   COUNT(*) as monthly_income_transactions
+            FROM income 
+            WHERE user_id = %s AND income_date >= %s
+        """,
+            (user_id, current_month.date()),
+        )
+        monthly_income_result = db.fetchone()
 
         # Categories count
         db.execute(
             """
-            SELECT COUNT(DISTINCT category) as categories_count
+            SELECT COUNT(DISTINCT category) as expense_categories_count
             FROM expenses 
             WHERE user_id = %s AND category IS NOT NULL
         """,
             (user_id,),
         )
-        categories_result = db.fetchone()
+        expense_categories_result = db.fetchone()
+
+        db.execute(
+            """
+            SELECT COUNT(DISTINCT category) as income_categories_count
+            FROM income 
+            WHERE user_id = %s AND category IS NOT NULL
+        """,
+            (user_id,),
+        )
+        income_categories_result = db.fetchone()
 
         # Recent transactions count (last 7 days)
         week_ago = datetime.now() - timedelta(days=7)
         db.execute(
             """
-            SELECT COUNT(*) as recent_transactions
+            SELECT COUNT(*) as recent_expense_transactions
             FROM expenses 
             WHERE user_id = %s AND created_at >= %s
         """,
             (user_id, week_ago),
         )
-        recent_result = db.fetchone()
+        recent_expense_result = db.fetchone()
+
+        db.execute(
+            """
+            SELECT COUNT(*) as recent_income_transactions
+            FROM income 
+            WHERE user_id = %s AND created_at >= %s
+        """,
+            (user_id, week_ago),
+        )
+        recent_income_result = db.fetchone()
+
+        total_expenses = float(expense_result["total_expenses"] or 0)
+        total_income = float(income_result["total_income"] or 0)
+        monthly_expenses = float(monthly_expense_result["monthly_expenses"] or 0)
+        monthly_income = float(monthly_income_result["monthly_income"] or 0)
 
         return {
-            "total_expenses": float(total_result["total_expenses"] or 0),
-            "monthly_expenses": float(monthly_result["monthly_expenses"] or 0),
-            "total_categories": int(categories_result["categories_count"] or 0),
-            "recent_transactions": int(recent_result["recent_transactions"] or 0),
-            "total_transactions": int(total_result["total_transactions"] or 0),
+            "total_expenses": total_expenses,
+            "total_income": total_income,
+            "net_worth": total_income - total_expenses,
+            "monthly_expenses": monthly_expenses,
+            "monthly_income": monthly_income,
+            "monthly_net": monthly_income - monthly_expenses,
+            "total_expense_categories": int(expense_categories_result["expense_categories_count"] or 0),
+            "total_income_categories": int(income_categories_result["income_categories_count"] or 0),
+            "recent_expense_transactions": int(recent_expense_result["recent_expense_transactions"] or 0),
+            "recent_income_transactions": int(recent_income_result["recent_income_transactions"] or 0),
+            "total_expense_transactions": int(expense_result["total_expense_transactions"] or 0),
+            "total_income_transactions": int(income_result["total_income_transactions"] or 0),
         }
 
     except Exception as e:
@@ -522,11 +821,11 @@ def get_dashboard_stats(db=Depends(get_db), current_user=Depends(get_current_use
 def get_yearly_stats(
     year: int, db=Depends(get_db), current_user=Depends(get_current_user)
 ):
-    """Get yearly statistics with monthly breakdown"""
+    """Get yearly statistics with monthly breakdown for both expenses and income"""
     try:
         user_id = current_user["id"]
 
-        # Get monthly breakdown for the year
+        # Get monthly expense breakdown for the year
         db.execute(
             """
             SELECT 
@@ -541,8 +840,24 @@ def get_yearly_stats(
         """,
             (user_id, year),
         )
+        monthly_expense_data = db.fetchall()
 
-        monthly_data = db.fetchall()
+        # Get monthly income breakdown for the year
+        db.execute(
+            """
+            SELECT 
+                EXTRACT(MONTH FROM income_date) as month,
+                COALESCE(SUM(amount), 0) as month_total,
+                COUNT(*) as month_transactions
+            FROM income 
+            WHERE user_id = %s 
+                AND EXTRACT(YEAR FROM income_date) = %s
+            GROUP BY EXTRACT(MONTH FROM income_date)
+            ORDER BY EXTRACT(MONTH FROM income_date)
+        """,
+            (user_id, year),
+        )
+        monthly_income_data = db.fetchall()
 
         # Get total for the year
         db.execute(
@@ -557,53 +872,75 @@ def get_yearly_stats(
         """,
             (user_id, year),
         )
+        year_expense_totals = db.fetchone()
 
-        year_totals = db.fetchone()
+        db.execute(
+            """
+            SELECT 
+                COALESCE(SUM(amount), 0) as year_total,
+                COUNT(*) as year_transactions,
+                COUNT(DISTINCT category) as year_categories
+            FROM income 
+            WHERE user_id = %s 
+                AND EXTRACT(YEAR FROM income_date) = %s
+        """,
+            (user_id, year),
+        )
+        year_income_totals = db.fetchone()
 
         # Initialize all 12 months with zero values
         monthly_breakdown = []
         month_names = [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December",
         ]
 
-        # Create a dictionary for easy lookup
-        monthly_dict = {int(row["month"]): row for row in monthly_data}
+        # Create dictionaries for easy lookup
+        expense_monthly_dict = {int(row["month"]): row for row in monthly_expense_data}
+        income_monthly_dict = {int(row["month"]): row for row in monthly_income_data}
 
         # Build complete monthly breakdown
         for month_num in range(1, 13):
-            month_data = monthly_dict.get(
+            expense_data = expense_monthly_dict.get(
                 month_num, {"month_total": 0, "month_transactions": 0}
             )
+            income_data = income_monthly_dict.get(
+                month_num, {"month_total": 0, "month_transactions": 0}
+            )
+            
+            expense_total = float(expense_data["month_total"])
+            income_total = float(income_data["month_total"])
+            
             monthly_breakdown.append(
                 {
                     "month": month_num,
                     "month_name": month_names[month_num - 1],
-                    "total": float(month_data["month_total"]),
-                    "transactions": int(month_data["month_transactions"]),
+                    "expense_total": expense_total,
+                    "income_total": income_total,
+                    "net_total": income_total - expense_total,
+                    "expense_transactions": int(expense_data["month_transactions"]),
+                    "income_transactions": int(income_data["month_transactions"]),
                 }
             )
 
-        year_total = float(year_totals["year_total"] or 0)
-        avg_monthly = year_total / 12 if year_total > 0 else 0
+        year_expense_total = float(year_expense_totals["year_total"] or 0)
+        year_income_total = float(year_income_totals["year_total"] or 0)
+        year_net_total = year_income_total - year_expense_total
+        avg_monthly_expense = year_expense_total / 12 if year_expense_total > 0 else 0
+        avg_monthly_income = year_income_total / 12 if year_income_total > 0 else 0
 
         return {
             "year": year,
             "monthly_breakdown": monthly_breakdown,
-            "year_total": year_total,
-            "year_transactions": int(year_totals["year_transactions"] or 0),
-            "year_categories": int(year_totals["year_categories"] or 0),
-            "avg_monthly": round(avg_monthly, 2),
+            "year_expense_total": year_expense_total,
+            "year_income_total": year_income_total,
+            "year_net_total": year_net_total,
+            "year_expense_transactions": int(year_expense_totals["year_transactions"] or 0),
+            "year_income_transactions": int(year_income_totals["year_transactions"] or 0),
+            "year_expense_categories": int(year_expense_totals["year_categories"] or 0),
+            "year_income_categories": int(year_income_totals["year_categories"] or 0),
+            "avg_monthly_expense": round(avg_monthly_expense, 2),
+            "avg_monthly_income": round(avg_monthly_income, 2),
         }
 
     except Exception as e:
@@ -613,18 +950,21 @@ def get_yearly_stats(
 
 @app.get("/available-years")
 def get_available_years(db=Depends(get_db), current_user=Depends(get_current_user)):
-    """Get years that have expense data"""
+    """Get years that have expense or income data"""
     try:
         user_id = current_user["id"]
 
+        # Get years from both expenses and income
         db.execute(
             """
-            SELECT DISTINCT EXTRACT(YEAR FROM expense_date) as year
-            FROM expenses 
-            WHERE user_id = %s
+            SELECT DISTINCT year FROM (
+                SELECT EXTRACT(YEAR FROM expense_date) as year FROM expenses WHERE user_id = %s
+                UNION
+                SELECT EXTRACT(YEAR FROM income_date) as year FROM income WHERE user_id = %s
+            ) as all_years
             ORDER BY year DESC
         """,
-            (user_id,),
+            (user_id, user_id),
         )
 
         years = [int(row["year"]) for row in db.fetchall()]
