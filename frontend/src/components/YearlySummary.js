@@ -151,7 +151,7 @@ const YearlySummary = ({ onClose }) => {
               </div>
 
               <div className="overview-card secondary">
-                <div className="card-icon">�</div>
+                <div className="card-icon">🫰</div>
                 <div className="card-info">
                   <h4>Total Expenses</h4>
                   <p className="card-value">
@@ -161,7 +161,7 @@ const YearlySummary = ({ onClose }) => {
               </div>
 
               <div className="overview-card tertiary">
-                <div className="card-icon">�</div>
+                <div className="card-icon">🌐</div>
                 <div className="card-info">
                   <h4>Net Worth</h4>
                   <p
@@ -289,7 +289,7 @@ const YearlySummary = ({ onClose }) => {
               </div>
 
               <div className="insight-card">
-                <div className="insight-icon">�</div>
+                <div className="insight-icon">⏫</div>
                 <div className="insight-info">
                   <h6>Highest Income Month</h6>
                   <p>
@@ -312,7 +312,7 @@ const YearlySummary = ({ onClose }) => {
               </div>
 
               <div className="insight-card">
-                <div className="insight-icon">�</div>
+                <div className="insight-icon">😎</div>
                 <div className="insight-info">
                   <h6>Best Net Month</h6>
                   <p>
@@ -333,7 +333,7 @@ const YearlySummary = ({ onClose }) => {
               </div>
 
               <div className="insight-card">
-                <div className="insight-icon">�</div>
+                <div className="insight-icon">⚖️</div>
                 <div className="insight-info">
                   <h6>Average Monthly</h6>
                   <p>

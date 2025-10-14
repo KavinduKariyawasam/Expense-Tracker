@@ -2,9 +2,13 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Register from "./components/Register";
 import Login from "./components/Login";
-import Dashboard from "./components/Dashboard";
+import DashboardNew from "./components/DashboardNew";
 import Expenses from "./components/Expenses";
 import Income from "./components/Income";
+import LoanManager from "./components/LoanManager";
+import ReportsPage from "./components/ReportsPage";
+import Settings from "./components/Settings";
+import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -18,7 +22,9 @@ function App() {
           path="/dashboard"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <Layout>
+                <DashboardNew />
+              </Layout>
             </PrivateRoute>
           }
         />
@@ -26,7 +32,9 @@ function App() {
           path="/expenses"
           element={
             <PrivateRoute>
-              <Expenses />
+              <Layout>
+                <Expenses />
+              </Layout>
             </PrivateRoute>
           }
         />
@@ -34,7 +42,39 @@ function App() {
           path="/income"
           element={
             <PrivateRoute>
-              <Income />
+              <Layout>
+                <Income />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/loans"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <LoanManager />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <ReportsPage />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <Settings />
+              </Layout>
             </PrivateRoute>
           }
         />

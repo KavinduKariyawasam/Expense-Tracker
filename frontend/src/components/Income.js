@@ -62,6 +62,31 @@ const Income = () => {
     return grouped;
   };
 
+  const getTotalAmount = () => {
+    return income.reduce((sum, inc) => sum + parseFloat(inc.amount || 0), 0);
+  };
+
+  const getAverageAmount = () => {
+    if (income.length === 0) return 0;
+    return getTotalAmount() / income.length;
+  };
+
+  const getCurrentMonthTotal = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    return income
+      .filter((incomeItem) => {
+        const incomeDate = new Date(incomeItem.income_date);
+        return (
+          incomeDate.getMonth() === currentMonth &&
+          incomeDate.getFullYear() === currentYear
+        );
+      })
+      .reduce((sum, inc) => sum + parseFloat(inc.amount || 0), 0);
+  };
+
   const formatCurrency = (amount) => {
     // eslint-disable-next-line no-undef
     return new Intl.NumberFormat("en-LK", {
@@ -181,13 +206,30 @@ const Income = () => {
         </div>
       ) : (
         <div className="income-summary">
-          <p>Total: {income.length} income records</p>
-          <p>
-            Total Amount:{" "}
-            {formatCurrency(
-              income.reduce((sum, inc) => sum + parseFloat(inc.amount || 0), 0)
-            )}
-          </p>
+          <div className="summary-stats">
+            <div className="stat-item">
+              <span className="stat-label">Total Transactions:</span>
+              <span className="stat-value">{income.length}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Total Amount:</span>
+              <span className="stat-value">
+                {formatCurrency(getTotalAmount())}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Average per Transaction:</span>
+              <span className="stat-value">
+                {formatCurrency(getAverageAmount())}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">This Month:</span>
+              <span className="stat-value">
+                {formatCurrency(getCurrentMonthTotal())}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
