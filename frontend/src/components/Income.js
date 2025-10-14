@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getIncome, deleteIncome } from "../services/income";
+import { getIncome, deleteIncome, updateIncome } from "../services/income";
 import AddIncome from "./AddIncome";
 import "./Income.css";
 
@@ -11,6 +11,8 @@ const Income = () => {
   const [error, setError] = useState("");
   const [groupedIncome, setGroupedIncome] = useState({});
   const [showAddIncome, setShowAddIncome] = useState(false);
+  const [editingIncome, setEditingIncome] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     loadAllIncome();
@@ -120,6 +122,40 @@ const Income = () => {
         setError("Failed to delete income");
       }
     }
+  };
+
+  const handleEditIncome = (incomeItem) => {
+    setEditingIncome(incomeItem.id);
+    setEditFormData({
+      source: incomeItem.source || "",
+      description: incomeItem.description,
+      amount: incomeItem.amount,
+      category: incomeItem.category,
+      income_date: incomeItem.income_date,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIncome(null);
+    setEditFormData({});
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await updateIncome(editingIncome, editFormData);
+      setEditingIncome(null);
+      setEditFormData({});
+      loadAllIncome(); // Refresh the list
+    } catch (err) {
+      setError("Failed to update income");
+    }
+  };
+
+  const handleEditFormChange = (field, value) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   if (loading) {
@@ -265,35 +301,139 @@ const Income = () => {
                       <div className="income-list">
                         {dayIncome.map((incomeItem) => (
                           <div key={incomeItem.id} className="income-item">
-                            <div className="income-main">
-                              <div className="income-description">
-                                <h4>{incomeItem.description}</h4>
-                                {incomeItem.source && (
-                                  <p className="income-source">
-                                    from {incomeItem.source}
-                                  </p>
-                                )}
+                            {editingIncome === incomeItem.id ? (
+                              // Edit mode
+                              <div className="income-edit-form">
+                                <div className="edit-row">
+                                  <input
+                                    type="text"
+                                    placeholder="Description"
+                                    value={editFormData.description || ""}
+                                    onChange={(e) =>
+                                      handleEditFormChange(
+                                        "description",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="edit-input"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Source (optional)"
+                                    value={editFormData.source || ""}
+                                    onChange={(e) =>
+                                      handleEditFormChange(
+                                        "source",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="edit-input"
+                                  />
+                                </div>
+                                <div className="edit-row">
+                                  <input
+                                    type="number"
+                                    placeholder="Amount"
+                                    value={editFormData.amount || ""}
+                                    onChange={(e) =>
+                                      handleEditFormChange(
+                                        "amount",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="edit-input"
+                                  />
+                                  <select
+                                    value={editFormData.category || ""}
+                                    onChange={(e) =>
+                                      handleEditFormChange(
+                                        "category",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="edit-input"
+                                  >
+                                    <option value="Salary">Salary</option>
+                                    <option value="Freelance">Freelance</option>
+                                    <option value="Business">Business</option>
+                                    <option value="Investment">
+                                      Investment
+                                    </option>
+                                    <option value="Gift">Gift</option>
+                                    <option value="Other">Other</option>
+                                  </select>
+                                </div>
+                                <div className="edit-row">
+                                  <input
+                                    type="date"
+                                    value={editFormData.income_date || ""}
+                                    onChange={(e) =>
+                                      handleEditFormChange(
+                                        "income_date",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="edit-input"
+                                  />
+                                  <div className="edit-actions">
+                                    <button
+                                      onClick={handleSaveEdit}
+                                      className="save-btn"
+                                    >
+                                      ✓ Save
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEdit}
+                                      className="cancel-btn"
+                                    >
+                                      ✕ Cancel
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="income-amount">
-                                {formatCurrency(incomeItem.amount)}
-                              </div>
-                            </div>
-                            <div className="income-details">
-                              <span className="income-category">
-                                {incomeItem.category}
-                              </span>
-                              <div className="income-actions">
-                                <button
-                                  className="delete-btn"
-                                  onClick={() =>
-                                    handleDeleteIncome(incomeItem.id)
-                                  }
-                                  title="Delete income"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
-                            </div>
+                            ) : (
+                              // View mode
+                              <>
+                                <div className="income-main">
+                                  <div className="income-description">
+                                    <h4>{incomeItem.description}</h4>
+                                    {incomeItem.source && (
+                                      <p className="income-source">
+                                        from {incomeItem.source}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="income-amount">
+                                    {formatCurrency(incomeItem.amount)}
+                                  </div>
+                                </div>
+                                <div className="income-details">
+                                  <span className="income-category">
+                                    {incomeItem.category}
+                                  </span>
+                                  <div className="income-actions">
+                                    <button
+                                      onClick={() =>
+                                        handleEditIncome(incomeItem)
+                                      }
+                                      className="edit-btn"
+                                      title="Edit income"
+                                    >
+                                      ✏️
+                                    </button>
+                                    <button
+                                      className="delete-btn"
+                                      onClick={() =>
+                                        handleDeleteIncome(incomeItem.id)
+                                      }
+                                      title="Delete income"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
                             {incomeItem.items &&
                               incomeItem.items.length > 0 && (
                                 <div className="income-items">

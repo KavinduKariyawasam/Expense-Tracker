@@ -15,7 +15,7 @@ const AddIncome = ({ onIncomeAdded, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [bulkMode, setBulkMode] = useState(false); // Start with single mode by default
+  const [bulkMode, setBulkMode] = useState(true); // Start with bulk mode by default
   const [lastIncome, setLastIncome] = useState(null); // Store last added income for quick copy
   const [bulkIncomes, setBulkIncomes] = useState([
     {

@@ -15,7 +15,7 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [bulkMode, setBulkMode] = useState(false); // Start with single mode by default
+  const [bulkMode, setBulkMode] = useState(true); // Start with bulk mode by default
   const [lastExpense, setLastExpense] = useState(null); // Store last added expense for quick copy
   const [bulkExpenses, setBulkExpenses] = useState([
     {
