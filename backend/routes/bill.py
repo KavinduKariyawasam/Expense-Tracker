@@ -5,7 +5,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from auth import get_current_user
 from database import get_db
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from schemas import BillData
+from models.schemas import BillData
 from utils import run_ocr_only_bytes
 
 logging.basicConfig(level=logging.INFO)
@@ -21,17 +21,21 @@ async def upload_bill(
     db=Depends(get_db),
 ):
     """Upload and parse a bill/invoice image or PDF"""
+    logger.info(f"User {current_user['username']} is uploading a bill: {file.filename}")
     extension = file.filename.split(".")[-1].lower()
     if extension not in ["png", "jpg", "jpeg", "pdf"]:
+        logger.info(f"Unsupported file type: {extension}")
         raise HTTPException(
             status_code=400,
             detail="Unsupported file type. Please upload a PNG, JPG, JPEG, or PDF file.",
         )
 
     try:
+        logger.info(f"Processing file: {file.filename}")
         file_bytes = await file.read()
+        logger.info(f"File size: {len(file_bytes)} bytes")
         parsed_data = run_ocr_only_bytes(file_bytes, extension=extension)
-
+        logger.info("File processed successfully")
         return {
             "success": True,
             "filename": file.filename,
@@ -58,16 +62,20 @@ def save_bill_expenses(
 
         # Parse the invoice date
         try:
+            logger.info(f"Parsing invoice date: {bill_data.invoice_date}")
             expense_date = (
                 date.fromisoformat(bill_data.invoice_date)
                 if bill_data.invoice_date
                 else date.today()
             )
         except ValueError:
+            logger.warning(f"Invalid invoice date format: {bill_data.invoice_date}, using today's date")
             expense_date = date.today()
 
+        logger.info(f"Using expense date: {expense_date}")
         # Save each item as a separate expense
         for item in bill_data.items:
+            logger.debug(f"Processing item: {item.description}")
             # Convert to Decimal for precise calculations
             quantity = Decimal(str(item.quantity)).quantize(
                 Decimal("0.001"), rounding=ROUND_HALF_UP
@@ -80,6 +88,7 @@ def save_bill_expenses(
             )
 
             # Insert expense for this item
+            logger.debug(f"Inserting expense for item: {item.description}")
             db.execute(
                 """
                 INSERT INTO expenses (user_id, vendor, description, amount, category, expense_date) 
@@ -100,6 +109,7 @@ def save_bill_expenses(
             expense_id = new_expense["id"]
 
             # Insert the item details
+            logger.debug(f"Inserting expense item details for expense ID: {expense_id}")
             db.execute(
                 """
                 INSERT INTO expense_items (expense_id, description, quantity, unit_price, line_total) 
@@ -121,6 +131,7 @@ def save_bill_expenses(
             expense_with_items = {**new_expense, "items": [item_details]}
             saved_expenses.append(expense_with_items)
 
+        logger.info(f"Successfully saved {len(saved_expenses)} expenses from bill")
         return {
             "message": f"Successfully saved {len(saved_expenses)} expenses",
             "expenses": saved_expenses,

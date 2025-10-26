@@ -4,7 +4,7 @@ from typing import List
 from auth import get_current_user
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import IncomeCreate, IncomeOut, IncomeUpdate
+from models.schemas import IncomeCreate, IncomeOut, IncomeUpdate
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,6 +19,7 @@ def create_income(
     """Create a new income"""
     try:
         # Insert income
+        logger.info(f"User {current_user['username']} is creating a new income: {income.source} - {income.amount}")
         db.execute(
             """
             INSERT INTO income (user_id, source, description, amount, category, income_date) 
@@ -39,9 +40,11 @@ def create_income(
         income_id = new_income["id"]
 
         # Insert income items if provided
+        logger.info(f"Adding {len(income.items) if income.items else 0} items to income ID {income_id}")
         items = []
         if income.items:
             for item in income.items:
+                logger.debug(f"Inserting income item: {item.description}")
                 db.execute(
                     """
                     INSERT INTO income_items (income_id, description, quantity, unit_price, line_total) 
@@ -58,6 +61,8 @@ def create_income(
                 )
                 items.append(db.fetchone())
 
+        logger.info(f"Successfully created income ID {income_id} with {len(items)} items")
+        
         # Return income with items
         return {**new_income, "items": items}
 
@@ -76,6 +81,7 @@ def get_income(
     """Get user's income"""
     try:
         # Get income
+        logger.info(f"Fetching income for user {current_user['username']} with skip={skip} and limit={limit}")
         db.execute(
             """
             SELECT id, user_id, source, description, amount, category, income_date, created_at, updated_at 
@@ -92,6 +98,7 @@ def get_income(
         # Get items for each income
         result = []
         for income_record in income_records:
+            logger.debug(f"Fetching items for income ID: {income_record['id']}")
             db.execute(
                 """
                 SELECT id, description, quantity, unit_price, line_total, created_at 
@@ -102,6 +109,8 @@ def get_income(
             )
             items = db.fetchall()
             result.append({**income_record, "items": items})
+            
+        logger.info(f"Successfully fetched {len(result)} income records for user {current_user['username']}")
 
         return result
 
@@ -117,6 +126,7 @@ def get_income_by_id(
     """Get specific income"""
     try:
         # Get income
+        logger.info(f"Fetching income ID {income_id} for user {current_user['username']}")
         db.execute(
             """
             SELECT id, user_id, source, description, amount, category, income_date, created_at, updated_at 
@@ -128,6 +138,7 @@ def get_income_by_id(
 
         income_record = db.fetchone()
         if not income_record:
+            logger.warning(f"Income ID {income_id} not found for user {current_user['username']}")
             raise HTTPException(status_code=404, detail="Income not found")
 
         # Get items
@@ -140,10 +151,13 @@ def get_income_by_id(
             (income_id,),
         )
         items = db.fetchall()
+        
+        logger.info(f"Successfully fetched income ID {income_id} for user {current_user['username']}")
 
         return {**income_record, "items": items}
 
     except HTTPException:
+        logger.error(f"Income ID {income_id} not found for user {current_user['username']}")
         raise
     except Exception as e:
         logger.error(f"Error getting income: {str(e)}")
@@ -160,11 +174,13 @@ def update_income(
     """Update income"""
     try:
         # Check if income exists and belongs to user
+        logger.info(f"Updating income ID {income_id} for user {current_user['username']}")
         db.execute(
             "SELECT id FROM income WHERE id = %s AND user_id = %s",
             (income_id, current_user["id"]),
         )
         if not db.fetchone():
+            logger.warning(f"Income ID {income_id} not found for user {current_user['username']}")
             raise HTTPException(status_code=404, detail="Income not found")
 
         # Build update query dynamically
@@ -189,6 +205,7 @@ def update_income(
 
         if not updates:
             # If no updates, just return current income
+            logger.info(f"No updates provided for income ID {income_id}, returning current record")
             return get_income_by_id(income_id, db, current_user)
 
         values.append(income_id)
@@ -214,10 +231,13 @@ def update_income(
             (income_id,),
         )
         items = db.fetchall()
+        
+        logger.info(f"Successfully updated income ID {income_id} for user {current_user['username']}")
 
         return {**updated_income, "items": items}
 
     except HTTPException:
+        logger.error(f"Income ID {income_id} not found for user {current_user['username']}")
         raise
     except Exception as e:
         logger.error(f"Error updating income: {str(e)}")
@@ -231,11 +251,13 @@ def delete_income(
     """Delete income"""
     try:
         # Check if income exists and belongs to user
+        logger.info(f"Deleting income ID {income_id} for user {current_user['username']}")
         db.execute(
             "SELECT id FROM income WHERE id = %s AND user_id = %s",
             (income_id, current_user["id"]),
         )
         if not db.fetchone():
+            logger.warning(f"Income ID {income_id} not found for user {current_user['username']}")
             raise HTTPException(status_code=404, detail="Income not found")
 
         # Delete income (items will be deleted by cascade)
@@ -243,10 +265,13 @@ def delete_income(
             "DELETE FROM income WHERE id = %s AND user_id = %s",
             (income_id, current_user["id"]),
         )
+        
+        logger.info(f"Successfully deleted income ID {income_id} for user {current_user['username']}")
 
         return {"message": "Income deleted successfully"}
 
     except HTTPException:
+        logger.error(f"Income ID {income_id} not found for user {current_user['username']}")
         raise
     except Exception as e:
         logger.error(f"Error deleting income: {str(e)}")

@@ -6,7 +6,7 @@ from typing import List
 from auth import get_current_user
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import ExpenseCreate, ExpenseOut, ExpenseUpdate
+from models.schemas import ExpenseCreate, ExpenseOut, ExpenseUpdate
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,6 +25,7 @@ def create_expense(
 ):
     """Create a new expense"""
     try:
+        logger.info(f"User {current_user['username']} is creating a new expense: {expense.description}")
         # Insert expense
         db.execute(
             """
@@ -46,6 +47,7 @@ def create_expense(
         expense_id = new_expense["id"]
 
         # Insert expense items if provided
+        logger.info(f"Inserting items for expense ID: {expense_id}")
         items = []
         if expense.items:
             for item in expense.items:
@@ -66,6 +68,7 @@ def create_expense(
                 items.append(db.fetchone())
 
         # Return expense with items
+        logger.info(f"Successfully created expense ID: {expense_id} with {len(items)} items")
         return {**new_expense, "items": items}
 
     except Exception as e:
@@ -83,6 +86,7 @@ def get_expenses(
     """Get user's expenses"""
     try:
         # Get expenses
+        logger.info(f"Fetching expenses for user {current_user['username']}, skip={skip}, limit={limit}")
         db.execute(
             """
             SELECT id, user_id, vendor, description, amount, category, expense_date, created_at, updated_at 
@@ -97,8 +101,10 @@ def get_expenses(
         expenses = db.fetchall()
 
         # Get items for each expense
+        logger.info(f"Fetching items for {len(expenses)} expenses")
         result = []
         for expense in expenses:
+            logger.debug(f"Fetching items for expense ID: {expense['id']}")
             db.execute(
                 """
                 SELECT id, description, quantity, unit_price, line_total, created_at 
@@ -124,6 +130,7 @@ def get_expense(
     """Get specific expense"""
     try:
         # Get expense
+        logger.info(f"Fetching expense ID: {expense_id} for user {current_user['username']}")
         db.execute(
             """
             SELECT id, user_id, vendor, description, amount, category, expense_date, created_at, updated_at 
@@ -135,6 +142,7 @@ def get_expense(
 
         expense = db.fetchone()
         if not expense:
+            logger.error(f"Expense ID: {expense_id} not found for user {current_user['username']}")
             raise HTTPException(status_code=404, detail="Expense not found")
 
         # Get items
@@ -147,10 +155,13 @@ def get_expense(
             (expense_id,),
         )
         items = db.fetchall()
+        
+        logger.info(f"Successfully fetched expense ID: {expense_id} with {len(items)} items")
 
         return {**expense, "items": items}
 
     except HTTPException:
+        logger.error(f"Expense ID: {expense_id} not found")
         raise
     except Exception as e:
         logger.error(f"Error getting expense: {str(e)}")
@@ -167,11 +178,13 @@ def update_expense(
     """Update expense"""
     try:
         # Check if expense exists and belongs to user
+        logger.info(f"Updating expense ID: {expense_id} for user {current_user['username']}")
         db.execute(
             "SELECT id FROM expenses WHERE id = %s AND user_id = %s",
             (expense_id, current_user["id"]),
         )
         if not db.fetchone():
+            logger.error(f"Expense ID: {expense_id} not found for user {current_user['username']}")
             raise HTTPException(status_code=404, detail="Expense not found")
 
         # Build update query dynamically
@@ -193,8 +206,11 @@ def update_expense(
         if expense.expense_date is not None:
             updates.append("expense_date = %s")
             values.append(expense.expense_date)
+            
+        logger.debug(f"Update fields for expense ID {expense_id}: {updates}")
 
         if not updates:
+            logger.info(f"No updates required for expense ID {expense_id}")
             # If no updates, just return current expense
             return get_expense(expense_id, db, current_user)
 
@@ -210,6 +226,8 @@ def update_expense(
 
         db.execute(update_query, values)
         updated_expense = db.fetchone()
+        
+        logger.info(f"Successfully updated expense ID: {expense_id}")
 
         # Get items
         db.execute(
@@ -221,10 +239,13 @@ def update_expense(
             (expense_id,),
         )
         items = db.fetchall()
+        
+        logger.info(f"Fetched {len(items)} items for updated expense ID: {expense_id}")
 
         return {**updated_expense, "items": items}
 
     except HTTPException:
+        logger.error(f"Expense ID: {expense_id} not found")
         raise
     except Exception as e:
         logger.error(f"Error updating expense: {str(e)}")
@@ -238,11 +259,13 @@ def delete_expense(
     """Delete expense"""
     try:
         # Check if expense exists and belongs to user
+        logger.info(f"Deleting expense ID: {expense_id} for user {current_user['username']}")
         db.execute(
             "SELECT id FROM expenses WHERE id = %s AND user_id = %s",
             (expense_id, current_user["id"]),
         )
         if not db.fetchone():
+            logger.error(f"Expense ID: {expense_id} not found for user {current_user['username']}")
             raise HTTPException(status_code=404, detail="Expense not found")
 
         # Delete expense (items will be deleted by cascade)
@@ -250,10 +273,13 @@ def delete_expense(
             "DELETE FROM expenses WHERE id = %s AND user_id = %s",
             (expense_id, current_user["id"]),
         )
+        
+        logger.info(f"Successfully deleted expense ID: {expense_id}")
 
         return {"message": "Expense deleted successfully"}
 
     except HTTPException:
+        logger.error(f"Expense ID: {expense_id} not found")
         raise
     except Exception as e:
         logger.error(f"Error deleting expense: {str(e)}")
