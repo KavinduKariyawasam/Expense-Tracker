@@ -5,4 +5,11 @@ from .income import income_route
 from .loan import loan_route
 from .stats import stats_route
 
-__app_include__ = [expense_route, income_route, stats_route, bill_route, auth_route, loan_route]
+__app_include__ = [
+    expense_route,
+    income_route,
+    stats_route,
+    bill_route,
+    auth_route,
+    loan_route,
+]

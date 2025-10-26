@@ -157,18 +157,18 @@ def create_tables():
         # Execute SQL statements to create tables
         print("Creating loans table...")
         cursor.execute(CREATE_LOANS_TABLE)
-        
+
         print("Creating loan_transactions table...")
         cursor.execute(CREATE_LOAN_TRANSACTIONS_TABLE)
-        
+
         print("Creating indexes...")
         cursor.execute(CREATE_INDEXES)
-        
+
         print("Creating trigger functions...")
         cursor.execute(CREATE_UPDATE_TRIGGER_FUNCTION)
         cursor.execute(CREATE_STATUS_UPDATE_FUNCTION)
         cursor.execute(CREATE_BALANCE_UPDATE_FUNCTION)
-        
+
         print("Creating triggers...")
         cursor.execute(CREATE_UPDATE_TRIGGER)
         cursor.execute(CREATE_STATUS_TRIGGER)
@@ -211,18 +211,24 @@ def drop_tables():
         cursor = connection.cursor()
 
         print("Dropping loan management tables...")
-        
+
         # Drop triggers first
-        cursor.execute("DROP TRIGGER IF EXISTS trigger_update_loan_balance ON loan_transactions;")
+        cursor.execute(
+            "DROP TRIGGER IF EXISTS trigger_update_loan_balance ON loan_transactions;"
+        )
         cursor.execute("DROP TRIGGER IF EXISTS trigger_update_loan_status ON loans;")
-        cursor.execute("DROP TRIGGER IF EXISTS trigger_update_loans_updated_at ON loans;")
-        
+        cursor.execute(
+            "DROP TRIGGER IF EXISTS trigger_update_loans_updated_at ON loans;"
+        )
+
         # Drop tables (loan_transactions first due to foreign key)
         cursor.execute("DROP TABLE IF EXISTS loan_transactions CASCADE;")
         cursor.execute("DROP TABLE IF EXISTS loans CASCADE;")
-        
+
         # Drop functions
-        cursor.execute("DROP FUNCTION IF EXISTS update_loan_balance_after_transaction();")
+        cursor.execute(
+            "DROP FUNCTION IF EXISTS update_loan_balance_after_transaction();"
+        )
         cursor.execute("DROP FUNCTION IF EXISTS update_loan_status();")
         cursor.execute("DROP FUNCTION IF EXISTS update_loans_updated_at();")
 
@@ -241,7 +247,7 @@ def drop_tables():
 
 if __name__ == "__main__":
     import sys
-    
+
     if len(sys.argv) > 1 and sys.argv[1] == "drop":
         drop_tables()
     else:

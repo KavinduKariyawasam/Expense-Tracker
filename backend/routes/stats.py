@@ -340,10 +340,12 @@ def get_monthly_stats(
     """Get detailed monthly statistics with daily breakdown, category analysis, and weekly summary"""
     try:
         user_id = current_user["id"]
-        
+
         # Validate month
         if month < 1 or month > 12:
-            raise HTTPException(status_code=400, detail="Month must be between 1 and 12")
+            raise HTTPException(
+                status_code=400, detail="Month must be between 1 and 12"
+            )
 
         # Get monthly totals
         db.execute(
@@ -415,15 +417,17 @@ def get_monthly_stats(
             (user_id, year, month, user_id, year, month),
         )
         daily_data = db.fetchall()
-        
+
         daily_breakdown = []
         for row in daily_data:
-            daily_breakdown.append({
-                "day": int(row["day"]),
-                "expenses": float(row["expenses"]),
-                "income": float(row["income"]),
-                "net_amount": float(row["net_amount"])
-            })
+            daily_breakdown.append(
+                {
+                    "day": int(row["day"]),
+                    "expenses": float(row["expenses"]),
+                    "income": float(row["income"]),
+                    "net_amount": float(row["net_amount"]),
+                }
+            )
 
         # Get category breakdown for expenses
         db.execute(
@@ -468,7 +472,7 @@ def get_monthly_stats(
                 {
                     "category": row["category"],
                     "amount": float(row["amount"]),
-                    "count": int(row["count"])
+                    "count": int(row["count"]),
                 }
                 for row in expense_categories
             ],
@@ -476,10 +480,10 @@ def get_monthly_stats(
                 {
                     "category": row["category"],
                     "amount": float(row["amount"]),
-                    "count": int(row["count"])
+                    "count": int(row["count"]),
                 }
                 for row in income_categories
-            ]
+            ],
         }
 
         # Get weekly summary
@@ -523,20 +527,24 @@ def get_monthly_stats(
             (user_id, year, month, user_id, year, month),
         )
         weekly_data = db.fetchall()
-        
+
         weekly_summary = []
         for row in weekly_data:
-            start_date = row["start_date"].strftime("%b %d") if row["start_date"] else ""
+            start_date = (
+                row["start_date"].strftime("%b %d") if row["start_date"] else ""
+            )
             end_date = row["end_date"].strftime("%b %d") if row["end_date"] else ""
             date_range = f"{start_date} - {end_date}" if start_date and end_date else ""
-            
-            weekly_summary.append({
-                "week_number": int(row["week_number"]),
-                "expenses": float(row["expenses"]),
-                "income": float(row["income"]),
-                "net": float(row["net"]),
-                "date_range": date_range
-            })
+
+            weekly_summary.append(
+                {
+                    "week_number": int(row["week_number"]),
+                    "expenses": float(row["expenses"]),
+                    "income": float(row["income"]),
+                    "net": float(row["net"]),
+                    "date_range": date_range,
+                }
+            )
 
         return {
             "year": year,
@@ -548,7 +556,7 @@ def get_monthly_stats(
             "income_transactions": income_transactions,
             "daily_breakdown": daily_breakdown,
             "category_breakdown": category_breakdown,
-            "weekly_summary": weekly_summary
+            "weekly_summary": weekly_summary,
         }
 
     except Exception as e:

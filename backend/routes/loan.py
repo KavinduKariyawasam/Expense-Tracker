@@ -5,8 +5,14 @@ from typing import List
 from auth import get_current_user
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import (LoanCreate, LoanOut, LoanSummary, LoanTransactionCreate,
-                     LoanTransactionOut, LoanUpdate)
+from schemas import (
+    LoanCreate,
+    LoanOut,
+    LoanSummary,
+    LoanTransactionCreate,
+    LoanTransactionOut,
+    LoanUpdate,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -143,7 +149,9 @@ def get_loan_summary(db=Depends(get_db), current_user=Depends(get_current_user))
             "total_loans_given": float(summary["total_loans_given"] or 0),
             "total_loans_received": float(summary["total_loans_received"] or 0),
             "total_outstanding_given": float(summary["total_outstanding_given"] or 0),
-            "total_outstanding_received": float(summary["total_outstanding_received"] or 0),
+            "total_outstanding_received": float(
+                summary["total_outstanding_received"] or 0
+            ),
             "active_loans_given": int(summary["active_loans_given"] or 0),
             "active_loans_received": int(summary["active_loans_received"] or 0),
             "overdue_loans_given": int(summary["overdue_loans_given"] or 0),
@@ -156,9 +164,7 @@ def get_loan_summary(db=Depends(get_db), current_user=Depends(get_current_user))
 
 
 @loan_route.get("/{loan_id}", response_model=LoanOut)
-def get_loan(
-    loan_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def get_loan(loan_id: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Get specific loan"""
     try:
         # Get loan

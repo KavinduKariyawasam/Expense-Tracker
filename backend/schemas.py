@@ -193,7 +193,7 @@ class LoanTransactionCreate(BaseModel):
 
     @validator("transaction_type")
     def validate_transaction_type(cls, v):
-        allowed_types = ['payment', 'interest', 'adjustment']
+        allowed_types = ["payment", "interest", "adjustment"]
         if v not in allowed_types:
             raise ValueError(f"Transaction type must be one of: {allowed_types}")
         return v
@@ -239,7 +239,7 @@ class LoanCreate(BaseModel):
 
     @validator("type")
     def validate_type(cls, v):
-        allowed_types = ['given', 'received']
+        allowed_types = ["given", "received"]
         if v not in allowed_types:
             raise ValueError(f"Loan type must be one of: {allowed_types}")
         return v
@@ -283,7 +283,7 @@ class LoanUpdate(BaseModel):
     @validator("status")
     def validate_status(cls, v):
         if v is not None:
-            allowed_statuses = ['active', 'completed', 'overdue', 'cancelled']
+            allowed_statuses = ["active", "completed", "overdue", "cancelled"]
             if v not in allowed_statuses:
                 raise ValueError(f"Status must be one of: {allowed_statuses}")
         return v
