@@ -1,4 +1,9 @@
 import logging
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +11,7 @@ from fastapi.security import OAuth2PasswordBearer
 from routes import (
     auth_route,
     bill_route,
+    chatbot_route,
     expense_route,
     income_route,
     loan_route,
@@ -24,6 +30,7 @@ app.include_router(stats_route)
 app.include_router(bill_route)
 app.include_router(auth_route)
 app.include_router(loan_route)
+app.include_router(chatbot_route)
 
 # Add CORS middleware
 app.add_middleware(

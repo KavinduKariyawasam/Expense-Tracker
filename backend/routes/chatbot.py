@@ -38,6 +38,11 @@ async def chat_with_bot(
     """
     try:
         logger.info(f"User {current_user['username']} initiated chat with message: {chat_message.message}")
+        
+        # Bind database and user to the agent tools
+        expense_tracker_agent.bind_tools(db)
+        expense_tracker_agent.set_current_user(current_user["id"])
+        
         response_text = expense_tracker_agent.chat(chat_message.message)
         
         return ChatResponse(
