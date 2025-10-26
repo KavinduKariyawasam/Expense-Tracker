@@ -9,7 +9,23 @@ export const EXPENSE_CATEGORIES = [
   "Travel",
   "Education",
   "Business",
-  "Others"
+  "Others",
+];
+
+// Common income categories used across the application
+export const INCOME_CATEGORIES = [
+  "Salary",
+  "Freelance",
+  "Business",
+  "Investment",
+  "Dividends",
+  "Interest",
+  "Rental",
+  "Bonus",
+  "Commission",
+  "Gift",
+  "Refund",
+  "Others",
 ];
 
 export default EXPENSE_CATEGORIES;

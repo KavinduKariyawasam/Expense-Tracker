@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getExpenses } from "../services/expense";
+import { getExpenses, updateExpense } from "../services/expense";
+import AddExpense from "./AddExpense";
 import "./Expenses.css";
 
 const Expenses = () => {
@@ -9,6 +10,9 @@ const Expenses = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [groupedExpenses, setGroupedExpenses] = useState({});
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     loadAllExpenses();
@@ -21,13 +25,8 @@ const Expenses = () => {
 
       // Load all expenses (set a high limit to get all, or we could implement pagination)
       const response = await getExpenses(0, 10000); // Get up to 10,000 expenses
-      console.log("API Response:", response); // Debug log
-      console.log("Response.expenses:", response.expenses); // Debug log
-      console.log("Response.expenses length:", response.expenses?.length); // Debug log
 
       const expensesArray = response.expenses || response || []; // Try different response structures
-      console.log("Final expenses array:", expensesArray); // Debug log
-      console.log("Final expenses array length:", expensesArray.length); // Debug log
 
       setExpenses(expensesArray);
 
@@ -35,7 +34,6 @@ const Expenses = () => {
       const grouped = groupExpensesByMonthAndDay(expensesArray);
       setGroupedExpenses(grouped);
     } catch (err) {
-      console.error("Error loading expenses:", err);
       setError("Failed to load expenses");
     } finally {
       setLoading(false);
@@ -72,6 +70,46 @@ const Expenses = () => {
     return grouped;
   };
 
+  const handleExpenseAdded = () => {
+    // Refresh the expenses list when a new expense is added
+    loadAllExpenses();
+    setShowAddExpense(false);
+  };
+
+  const handleEditExpense = (expense) => {
+    setEditingExpense(expense.id);
+    setEditFormData({
+      vendor: expense.vendor || "",
+      description: expense.description,
+      amount: expense.amount,
+      category: expense.category,
+      expense_date: expense.expense_date,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingExpense(null);
+    setEditFormData({});
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await updateExpense(editingExpense, editFormData);
+      setEditingExpense(null);
+      setEditFormData({});
+      loadAllExpenses(); // Refresh the list
+    } catch (err) {
+      setError("Failed to update expense");
+    }
+  };
+
+  const handleEditFormChange = (field, value) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const calculateMonthTotal = (monthData) => {
     let total = 0;
     Object.values(monthData).forEach((dayExpenses) => {
@@ -88,12 +126,36 @@ const Expenses = () => {
     }, 0);
   };
 
+  const getTotalAmount = () => {
+    return expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
+  };
+
+  const getAverageAmount = () => {
+    if (expenses.length === 0) return 0;
+    return getTotalAmount() / expenses.length;
+  };
+
+  const getCurrentMonthTotal = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    return expenses
+      .filter((expense) => {
+        const expenseDate = new Date(expense.expense_date);
+        return (
+          expenseDate.getMonth() === currentMonth &&
+          expenseDate.getFullYear() === currentYear
+        );
+      })
+      .reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
+  };
+
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-LK", {
-      style: "currency",
-      currency: "LKR",
-      minimumFractionDigits: 2,
-    }).format(amount);
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return "LKR 0.00";
+    }
+    return `LKR ${Number(amount).toFixed(2)}`;
   };
 
   if (loading) {
@@ -170,29 +232,63 @@ const Expenses = () => {
   return (
     <div className="expenses-container">
       <div className="expenses-header">
-        <div className="header-left">
-          <button
-            className="back-btn"
-            onClick={() => navigate("/dashboard")}
-            title="Back to Dashboard"
-          >
-            ← Back
-          </button>
-          <h1>All Transactions</h1>
+        <div className="header-top">
+          <div className="header-left">
+            <button
+              className="back-btn"
+              onClick={() => navigate("/dashboard")}
+              title="Back to Dashboard"
+            >
+              ← Back
+            </button>
+            <h1>All Transactions</h1>
+          </div>
+          <div className="header-right">
+            <button
+              className="add-expense-btn"
+              onClick={() => setShowAddExpense(!showAddExpense)}
+              title={showAddExpense ? "Hide Add Expense" : "Add New Expense"}
+            >
+              {showAddExpense ? "✕ Close" : "➕ Add Expense"}
+            </button>
+          </div>
         </div>
         <div className="expenses-summary">
-          <p>Total: {expenses.length} transactions</p>
-          <p>
-            Amount:{" "}
-            {formatCurrency(
-              expenses.reduce(
-                (sum, exp) => sum + parseFloat(exp.amount || 0),
-                0
-              )
-            )}
-          </p>
+          <div className="summary-stats">
+            <div className="stat-item">
+              <span className="stat-label">Total Transactions:</span>
+              <span className="stat-value">{expenses.length}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Total Amount:</span>
+              <span className="stat-value">
+                {formatCurrency(getTotalAmount())}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Average per Transaction:</span>
+              <span className="stat-value">
+                {formatCurrency(getAverageAmount())}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">This Month:</span>
+              <span className="stat-value">
+                {formatCurrency(getCurrentMonthTotal())}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
+
+      {showAddExpense && (
+        <div className="add-expense-section">
+          <AddExpense
+            onExpenseAdded={handleExpenseAdded}
+            onClose={() => setShowAddExpense(false)}
+          />
+        </div>
+      )}
 
       <div className="expenses-content">
         {Object.entries(groupedExpenses)
@@ -227,31 +323,153 @@ const Expenses = () => {
                           )
                           .map((expense) => (
                             <div key={expense.id} className="expense-item">
-                              <div className="expense-main">
-                                <div className="expense-description">
-                                  <span className="description">
-                                    {expense.description}
-                                  </span>
-                                  {expense.vendor && (
-                                    <span className="vendor">
-                                      @ {expense.vendor}
-                                    </span>
-                                  )}
+                              {editingExpense === expense.id ? (
+                                // Edit mode
+                                <div className="expense-edit-form">
+                                  <div className="edit-row">
+                                    <input
+                                      type="text"
+                                      placeholder="Description"
+                                      value={editFormData.description || ""}
+                                      onChange={(e) =>
+                                        handleEditFormChange(
+                                          "description",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="edit-input"
+                                    />
+                                    <input
+                                      type="text"
+                                      placeholder="Vendor (optional)"
+                                      value={editFormData.vendor || ""}
+                                      onChange={(e) =>
+                                        handleEditFormChange(
+                                          "vendor",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="edit-input"
+                                    />
+                                  </div>
+                                  <div className="edit-row">
+                                    <input
+                                      type="number"
+                                      placeholder="Amount"
+                                      value={editFormData.amount || ""}
+                                      onChange={(e) =>
+                                        handleEditFormChange(
+                                          "amount",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="edit-input"
+                                    />
+                                    <select
+                                      value={editFormData.category || ""}
+                                      onChange={(e) =>
+                                        handleEditFormChange(
+                                          "category",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="edit-input"
+                                    >
+                                      <option value="Food & Dining">
+                                        Food & Dining
+                                      </option>
+                                      <option value="Transportation">
+                                        Transportation
+                                      </option>
+                                      <option value="Shopping">Shopping</option>
+                                      <option value="Entertainment">
+                                        Entertainment
+                                      </option>
+                                      <option value="Bills & Utilities">
+                                        Bills & Utilities
+                                      </option>
+                                      <option value="Healthcare">
+                                        Healthcare
+                                      </option>
+                                      <option value="Education">
+                                        Education
+                                      </option>
+                                      <option value="Travel">Travel</option>
+                                      <option value="Other">Other</option>
+                                    </select>
+                                  </div>
+                                  <div className="edit-row">
+                                    <input
+                                      type="date"
+                                      value={editFormData.expense_date || ""}
+                                      onChange={(e) =>
+                                        handleEditFormChange(
+                                          "expense_date",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="edit-input"
+                                    />
+                                    <div className="edit-actions">
+                                      <button
+                                        onClick={handleSaveEdit}
+                                        className="save-btn"
+                                      >
+                                        ✓ Save
+                                      </button>
+                                      <button
+                                        onClick={handleCancelEdit}
+                                        className="cancel-btn"
+                                      >
+                                        ✕ Cancel
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="expense-amount">
-                                  {formatCurrency(expense.amount)}
-                                </div>
-                              </div>
-                              <div className="expense-meta">
-                                <span className="category">
-                                  {expense.category}
-                                </span>
-                                {expense.items && expense.items.length > 0 && (
-                                  <span className="items-count">
-                                    {expense.items.length} items
-                                  </span>
-                                )}
-                              </div>
+                              ) : (
+                                // View mode
+                                <>
+                                  <div className="expense-main">
+                                    <div className="expense-description">
+                                      <span className="description">
+                                        {expense.description}
+                                      </span>
+                                      {expense.vendor && (
+                                        <span className="vendor">
+                                          @ {expense.vendor}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="expense-amount">
+                                      {formatCurrency(expense.amount)}
+                                    </div>
+                                  </div>
+                                  <div className="expense-meta">
+                                    <div className="expense-info">
+                                      <span className="category">
+                                        {expense.category}
+                                      </span>
+                                      {expense.items &&
+                                        expense.items.length > 0 && (
+                                          <span className="items-count">
+                                            {expense.items.length} items
+                                          </span>
+                                        )}
+                                    </div>
+                                    <div className="expense-actions">
+                                      <button
+                                        onClick={() =>
+                                          handleEditExpense(expense)
+                                        }
+                                        className="edit-btn"
+                                        title="Edit expense"
+                                      >
+                                        ✏️
+                                      </button>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ))}
                       </div>

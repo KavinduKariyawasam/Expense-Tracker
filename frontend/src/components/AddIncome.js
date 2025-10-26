@@ -1,51 +1,51 @@
 import React, { useState } from "react";
-import { createExpense } from "../services/expense";
-import { EXPENSE_CATEGORIES } from "../constants/categories";
-import "./AddExpense.css";
+import { createIncome } from "../services/income";
+import { INCOME_CATEGORIES } from "../constants/categories";
+import "./AddIncome.css";
 
-const AddExpense = ({ onExpenseAdded, onClose }) => {
+const AddIncome = ({ onIncomeAdded, onClose }) => {
   const [formData, setFormData] = useState({
-    vendor: "",
+    source: "",
     description: "",
     amount: "",
-    category: "Food & Dining",
-    expense_date: new Date().toISOString().split("T")[0], // Today's date as default
+    category: "Salary",
+    income_date: new Date().toISOString().split("T")[0], // Today's date as default
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [bulkMode, setBulkMode] = useState(true); // Start with bulk mode by default
-  const [lastExpense, setLastExpense] = useState(null); // Store last added expense for quick copy
-  const [bulkExpenses, setBulkExpenses] = useState([
+  const [lastIncome, setLastIncome] = useState(null); // Store last added income for quick copy
+  const [bulkIncomes, setBulkIncomes] = useState([
     {
       id: 1,
-      vendor: "",
+      source: "",
       description: "",
       amount: "",
-      category: "Food & Dining",
+      category: "Salary",
     },
     {
       id: 2,
-      vendor: "",
+      source: "",
       description: "",
       amount: "",
-      category: "Food & Dining",
+      category: "Salary",
     },
     {
       id: 3,
-      vendor: "",
+      source: "",
       description: "",
       amount: "",
-      category: "Food & Dining",
+      category: "Salary",
     },
   ]);
   const [bulkDate, setBulkDate] = useState(
     new Date().toISOString().split("T")[0]
   );
 
-  // Use shared expense categories
-  const categories = EXPENSE_CATEGORIES;
+  // Use shared income categories
+  const categories = INCOME_CATEGORIES;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -74,7 +74,7 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
       return false;
     }
 
-    if (!formData.expense_date) {
+    if (!formData.income_date) {
       setError("Please select a date");
       return false;
     }
@@ -94,31 +94,31 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
     setSuccessMessage("");
 
     try {
-      const expenseData = {
-        vendor: formData.vendor.trim() || null,
+      const incomeData = {
+        source: formData.source.trim() || null,
         description: formData.description.trim(),
         amount: parseFloat(formData.amount),
         category: formData.category,
-        expense_date: formData.expense_date,
-        items: [], // Empty items array for manual expenses
+        income_date: formData.income_date,
+        items: [], // Empty items array for manual income
       };
 
-      const newExpense = await createExpense(expenseData);
+      const newIncome = await createIncome(incomeData);
 
-      // Store last expense for quick copy
-      setLastExpense(expenseData);
+      // Store last income for quick copy
+      setLastIncome(incomeData);
 
       // Show success message
       const message = shouldClose
-        ? "Expense added successfully!"
+        ? "Income added successfully!"
         : bulkMode
-        ? "Expense added! Fields preserved for bulk entry."
-        : "Expense added! Add another one below.";
+        ? "Income added! Fields preserved for bulk entry."
+        : "Income added! Add another one below.";
       setSuccessMessage(message);
 
       // Notify parent component
-      if (onExpenseAdded) {
-        onExpenseAdded(newExpense);
+      if (onIncomeAdded) {
+        onIncomeAdded(newIncome);
       }
 
       if (shouldClose) {
@@ -129,22 +129,22 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
       } else {
         // Reset form but keep some fields for quick entry based on bulk mode
         if (bulkMode) {
-          // In bulk mode: keep vendor, category, and date
+          // In bulk mode: keep source, category, and date
           setFormData((prevData) => ({
-            vendor: prevData.vendor, // Keep vendor for bulk entries
+            source: prevData.source, // Keep source for bulk entries
             description: "", // Clear description
             amount: "", // Clear amount
             category: prevData.category, // Keep category for bulk entries
-            expense_date: prevData.expense_date, // Keep date for bulk entries
+            income_date: prevData.income_date, // Keep date for bulk entries
           }));
         } else {
           // In normal mode: reset everything to defaults
           setFormData({
-            vendor: "",
+            source: "",
             description: "",
             amount: "",
-            category: "Food & Dining",
-            expense_date: new Date().toISOString().split("T")[0],
+            category: "Salary",
+            income_date: new Date().toISOString().split("T")[0],
           });
         }
 
@@ -155,21 +155,21 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
         }, 100);
       }
     } catch (err) {
-      console.error("Error creating expense:", err);
-      setError(err.message || "Failed to create expense");
+      console.error("Error creating income:", err);
+      setError(err.message || "Failed to create income");
     } finally {
       setLoading(false);
     }
   };
 
-  const copyLastExpense = () => {
-    if (lastExpense) {
+  const copyLastIncome = () => {
+    if (lastIncome) {
       setFormData({
-        vendor: lastExpense.vendor || "",
-        description: lastExpense.description,
-        amount: lastExpense.amount.toString(),
-        category: lastExpense.category,
-        expense_date: lastExpense.expense_date,
+        source: lastIncome.source || "",
+        description: lastIncome.description,
+        amount: lastIncome.amount.toString(),
+        category: lastIncome.category,
+        income_date: lastIncome.income_date,
       });
       setSuccessMessage("");
       setError("");
@@ -197,47 +197,47 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
   };
 
   // Bulk mode functions
-  const addBulkExpenseRow = () => {
-    const newId = Math.max(...bulkExpenses.map((e) => e.id)) + 1;
-    setBulkExpenses((prev) => [
+  const addBulkIncomeRow = () => {
+    const newId = Math.max(...bulkIncomes.map((e) => e.id)) + 1;
+    setBulkIncomes((prev) => [
       ...prev,
       {
         id: newId,
-        vendor: "",
+        source: "",
         description: "",
         amount: "",
-        category: "Food & Dining",
+        category: "Salary",
       },
     ]);
   };
 
-  const removeBulkExpenseRow = (id) => {
-    if (bulkExpenses.length > 1) {
-      setBulkExpenses((prev) => prev.filter((expense) => expense.id !== id));
+  const removeBulkIncomeRow = (id) => {
+    if (bulkIncomes.length > 1) {
+      setBulkIncomes((prev) => prev.filter((income) => income.id !== id));
     }
   };
 
-  const updateBulkExpense = (id, field, value) => {
-    setBulkExpenses((prev) =>
-      prev.map((expense) =>
-        expense.id === id ? { ...expense, [field]: value } : expense
+  const updateBulkIncome = (id, field, value) => {
+    setBulkIncomes((prev) =>
+      prev.map((income) =>
+        income.id === id ? { ...income, [field]: value } : income
       )
     );
   };
 
-  const validateBulkExpenses = () => {
+  const validateBulkIncomes = () => {
     if (!bulkDate) {
-      setError("Please select a date for all expenses");
+      setError("Please select a date for all incomes");
       return false;
     }
 
-    const validExpenses = bulkExpenses.filter(
-      (exp) =>
-        exp.description.trim() && exp.amount && parseFloat(exp.amount) > 0
+    const validIncomes = bulkIncomes.filter(
+      (inc) =>
+        inc.description.trim() && inc.amount && parseFloat(inc.amount) > 0
     );
 
-    if (validExpenses.length === 0) {
-      setError("Please add at least one expense with description and amount");
+    if (validIncomes.length === 0) {
+      setError("Please add at least one income with description and amount");
       return false;
     }
 
@@ -245,7 +245,7 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
   };
 
   const handleBulkSubmit = async () => {
-    if (!validateBulkExpenses()) {
+    if (!validateBulkIncomes()) {
       return;
     }
 
@@ -254,58 +254,58 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
     setSuccessMessage("");
 
     try {
-      const validExpenses = bulkExpenses.filter(
-        (exp) =>
-          exp.description.trim() && exp.amount && parseFloat(exp.amount) > 0
+      const validIncomes = bulkIncomes.filter(
+        (inc) =>
+          inc.description.trim() && inc.amount && parseFloat(inc.amount) > 0
       );
 
-      const expensePromises = validExpenses.map((expense) =>
-        createExpense({
-          vendor: expense.vendor.trim() || null,
-          description: expense.description.trim(),
-          amount: parseFloat(expense.amount),
-          category: expense.category,
-          expense_date: bulkDate,
+      const incomePromises = validIncomes.map((income) =>
+        createIncome({
+          source: income.source.trim() || null,
+          description: income.description.trim(),
+          amount: parseFloat(income.amount),
+          category: income.category,
+          income_date: bulkDate,
           items: [],
         })
       );
 
-      const results = await Promise.all(expensePromises);
+      const results = await Promise.all(incomePromises);
 
       // Clear the table and reset
-      setBulkExpenses([
+      setBulkIncomes([
         {
           id: 1,
-          vendor: "",
+          source: "",
           description: "",
           amount: "",
-          category: "Food & Dining",
+          category: "Salary",
         },
         {
           id: 2,
-          vendor: "",
+          source: "",
           description: "",
           amount: "",
-          category: "Food & Dining",
+          category: "Salary",
         },
         {
           id: 3,
-          vendor: "",
+          source: "",
           description: "",
           amount: "",
-          category: "Food & Dining",
+          category: "Salary",
         },
       ]);
 
-      setSuccessMessage(`Successfully added ${results.length} expenses!`);
+      setSuccessMessage(`Successfully added ${results.length} incomes!`);
 
-      // Notify parent component for each expense
-      if (onExpenseAdded) {
-        results.forEach((result) => onExpenseAdded(result));
+      // Notify parent component for each income
+      if (onIncomeAdded) {
+        results.forEach((result) => onIncomeAdded(result));
       }
     } catch (err) {
-      console.error("Error creating bulk expenses:", err);
-      setError(err.message || "Failed to create expenses");
+      console.error("Error creating bulk incomes:", err);
+      setError(err.message || "Failed to create incomes");
     } finally {
       setLoading(false);
     }
@@ -314,11 +314,11 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
   const handleCancel = () => {
     // Reset form - respect bulk mode when available
     setFormData({
-      vendor: "",
+      source: "",
       description: "",
       amount: "",
-      category: "Food & Dining",
-      expense_date: new Date().toISOString().split("T")[0],
+      category: "Salary",
+      income_date: new Date().toISOString().split("T")[0],
     });
     setError("");
     setSuccessMessage("");
@@ -329,9 +329,9 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
   };
 
   return (
-    <div className="add-expense-container">
-      <div className="add-expense-header">
-        <h3>{bulkMode ? "Add Multiple Expenses" : "Add New Expense"}</h3>
+    <div className="add-income-container">
+      <div className="add-income-header">
+        <h3>{bulkMode ? "Add Multiple Incomes" : "Add New Income"}</h3>
         <div className="header-controls">
           <label className="bulk-mode-toggle">
             <input
@@ -362,9 +362,9 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
 
       {bulkMode ? (
         // Bulk Mode - Table Interface
-        <div className="bulk-expense-container">
+        <div className="bulk-income-container">
           <div className="bulk-date-selector">
-            <label htmlFor="bulk-date">Date for all expenses *</label>
+            <label htmlFor="bulk-date">Date for all incomes *</label>
             <input
               type="date"
               id="bulk-date"
@@ -375,32 +375,32 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
             />
           </div>
 
-          <div className="bulk-expenses-table">
+          <div className="bulk-incomes-table">
             <div className="table-header">
-              <span>Vendor</span>
+              <span>Source</span>
               <span>Description *</span>
               <span>Amount (LKR) *</span>
               <span>Category</span>
               <span>Actions</span>
             </div>
 
-            {bulkExpenses.map((expense, index) => (
-              <div key={expense.id} className="table-row">
+            {bulkIncomes.map((income, index) => (
+              <div key={income.id} className="table-row">
                 <input
                   type="text"
-                  placeholder="Store name"
-                  value={expense.vendor}
+                  placeholder="Income source"
+                  value={income.source}
                   onChange={(e) =>
-                    updateBulkExpense(expense.id, "vendor", e.target.value)
+                    updateBulkIncome(income.id, "source", e.target.value)
                   }
                   disabled={loading}
                 />
                 <input
                   type="text"
-                  placeholder="What did you buy?"
-                  value={expense.description}
+                  placeholder="Description of income"
+                  value={income.description}
                   onChange={(e) =>
-                    updateBulkExpense(expense.id, "description", e.target.value)
+                    updateBulkIncome(income.id, "description", e.target.value)
                   }
                   disabled={loading}
                   required
@@ -410,17 +410,17 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  value={expense.amount}
+                  value={income.amount}
                   onChange={(e) =>
-                    updateBulkExpense(expense.id, "amount", e.target.value)
+                    updateBulkIncome(income.id, "amount", e.target.value)
                   }
                   disabled={loading}
                   required
                 />
                 <select
-                  value={expense.category}
+                  value={income.category}
                   onChange={(e) =>
-                    updateBulkExpense(expense.id, "category", e.target.value)
+                    updateBulkIncome(income.id, "category", e.target.value)
                   }
                   disabled={loading}
                 >
@@ -431,13 +431,13 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
                   ))}
                 </select>
                 <div className="row-actions">
-                  {bulkExpenses.length > 1 && (
+                  {bulkIncomes.length > 1 && (
                     <button
                       type="button"
                       className="remove-row-btn"
-                      onClick={() => removeBulkExpenseRow(expense.id)}
+                      onClick={() => removeBulkIncomeRow(income.id)}
                       disabled={loading}
-                      title="Remove this expense"
+                      title="Remove this income"
                     >
                       ✕
                     </button>
@@ -451,10 +451,10 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
             <button
               type="button"
               className="add-row-btn"
-              onClick={addBulkExpenseRow}
+              onClick={addBulkIncomeRow}
               disabled={loading}
             >
-              + Add Another Expense
+              + Add Another Income
             </button>
           </div>
 
@@ -474,43 +474,42 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
               disabled={loading}
             >
               {loading
-                ? "Adding Expenses..."
+                ? "Adding Incomes..."
                 : `Add ${
-                    bulkExpenses.filter((e) => e.description && e.amount).length
-                  } Expenses`}
+                    bulkIncomes.filter((e) => e.description && e.amount).length
+                  } Incomes`}
             </button>
           </div>
         </div>
       ) : (
         // Single Mode - Original Form
         <div>
-          {lastExpense && (
+          {lastIncome && (
             <div className="quick-actions">
               <button
                 type="button"
                 className="copy-last-btn"
-                onClick={copyLastExpense}
+                onClick={copyLastIncome}
                 disabled={loading}
               >
-                📋 Copy Last: {lastExpense.description} ({lastExpense.amount}{" "}
-                LKR)
+                📋 Copy Last: {lastIncome.description} ({lastIncome.amount} LKR)
               </button>
             </div>
           )}
 
           <form
             onSubmit={(e) => handleSubmit(e, false)}
-            className="add-expense-form"
+            className="add-income-form"
             onKeyDown={handleKeyDown}
           >
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="expense_date">Date *</label>
+                <label htmlFor="income_date">Date *</label>
                 <input
                   type="date"
-                  id="expense_date"
-                  name="expense_date"
-                  value={formData.expense_date}
+                  id="income_date"
+                  name="income_date"
+                  value={formData.income_date}
                   onChange={handleInputChange}
                   required
                   disabled={loading}
@@ -537,14 +536,14 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="vendor">Vendor/Store (Optional)</label>
+              <label htmlFor="source">Source (Optional)</label>
               <input
                 type="text"
-                id="vendor"
-                name="vendor"
-                value={formData.vendor}
+                id="source"
+                name="source"
+                value={formData.source}
                 onChange={handleInputChange}
-                placeholder="e.g., Walmart, Amazon, Gas Station"
+                placeholder="e.g., Company Name, Client, Investment Platform"
                 disabled={loading}
               />
             </div>
@@ -557,7 +556,7 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="e.g., Grocery shopping, Gas fill-up, Lunch"
+                placeholder="e.g., Monthly Salary, Freelance Project, Dividend"
                 required
                 disabled={loading}
               />
@@ -581,38 +580,38 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
                 <div className="quick-amounts">
                   <button
                     type="button"
-                    onClick={() => quickFillAmount(100)}
-                    disabled={loading}
-                  >
-                    100
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => quickFillAmount(500)}
-                    disabled={loading}
-                  >
-                    500
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => quickFillAmount(1000)}
-                    disabled={loading}
-                  >
-                    1K
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => quickFillAmount(2000)}
-                    disabled={loading}
-                  >
-                    2K
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => quickFillAmount(5000)}
                     disabled={loading}
                   >
                     5K
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quickFillAmount(10000)}
+                    disabled={loading}
+                  >
+                    10K
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quickFillAmount(25000)}
+                    disabled={loading}
+                  >
+                    25K
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quickFillAmount(50000)}
+                    disabled={loading}
+                  >
+                    50K
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quickFillAmount(100000)}
+                    disabled={loading}
+                  >
+                    100K
                   </button>
                 </div>
               </div>
@@ -658,4 +657,4 @@ const AddExpense = ({ onExpenseAdded, onClose }) => {
   );
 };
 
-export default AddExpense;
+export default AddIncome;

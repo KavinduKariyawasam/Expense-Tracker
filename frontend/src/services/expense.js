@@ -165,3 +165,206 @@ export const getAvailableYears = async () => {
 
   return response.json();
 };
+
+export const getMonthlyStats = async (year, month) => {
+  const response = await fetch(`${API_URL}/monthly-stats/${year}/${month}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    throw new Error("Failed to fetch monthly statistics");
+  }
+
+  return response.json();
+};
+
+// Loan Management API calls
+export const getLoans = async (
+  loanType = null,
+  status = null,
+  skip = 0,
+  limit = 100
+) => {
+  const params = new URLSearchParams({
+    skip: skip.toString(),
+    limit: limit.toString(),
+  });
+
+  if (loanType) params.append("loan_type", loanType);
+  if (status) params.append("status", status);
+
+  const response = await fetch(`${API_URL}/loans?${params}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    throw new Error("Failed to fetch loans");
+  }
+
+  return response.json();
+};
+
+export const getLoanSummary = async () => {
+  const response = await fetch(`${API_URL}/loans/summary`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    throw new Error("Failed to fetch loan summary");
+  }
+
+  return response.json();
+};
+
+export const getLoan = async (loanId) => {
+  const response = await fetch(`${API_URL}/loans/${loanId}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    if (response.status === 404) {
+      throw new Error("Loan not found");
+    }
+    throw new Error("Failed to fetch loan");
+  }
+
+  return response.json();
+};
+
+export const createLoan = async (loanData) => {
+  const response = await fetch(`${API_URL}/loans`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(loanData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to create loan");
+  }
+
+  return response.json();
+};
+
+export const updateLoan = async (loanId, loanData) => {
+  const response = await fetch(`${API_URL}/loans/${loanId}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(loanData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    if (response.status === 404) {
+      throw new Error("Loan not found");
+    }
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to update loan");
+  }
+
+  return response.json();
+};
+
+export const deleteLoan = async (loanId) => {
+  const response = await fetch(`${API_URL}/loans/${loanId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    if (response.status === 404) {
+      throw new Error("Loan not found");
+    }
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to delete loan");
+  }
+
+  return response.json();
+};
+
+export const addLoanTransaction = async (loanId, transactionData) => {
+  const response = await fetch(`${API_URL}/loans/${loanId}/transactions`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(transactionData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    if (response.status === 404) {
+      throw new Error("Loan not found");
+    }
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to add loan transaction");
+  }
+
+  return response.json();
+};
+
+export const getLoanTransactions = async (loanId) => {
+  const response = await fetch(`${API_URL}/loans/${loanId}/transactions`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    if (response.status === 404) {
+      throw new Error("Loan not found");
+    }
+    throw new Error("Failed to fetch loan transactions");
+  }
+
+  return response.json();
+};
+
+export const deleteLoanTransaction = async (loanId, transactionId) => {
+  const response = await fetch(
+    `${API_URL}/loans/${loanId}/transactions/${transactionId}`,
+    {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    if (response.status === 404) {
+      throw new Error("Loan or transaction not found");
+    }
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to delete loan transaction");
+  }
+
+  return response.json();
+};

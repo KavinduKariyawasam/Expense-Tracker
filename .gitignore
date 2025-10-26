@@ -5,6 +5,8 @@ output/
 notebooks/
 compare.txt
 
+database_setup.sql
+
 # Created by https://www.toptal.com/developers/gitignore/api/react,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,python
 

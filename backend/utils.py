@@ -4,8 +4,13 @@ from multiprocessing import process
 import cv2
 import numpy as np
 from src.analyze import categorize_and_sum_items, parse_invoice
-from src.ocr import (mistral_ocr, ocr_with_easyocr, ocr_with_paddleocr,
-                     preprocess, preprocess_image)
+from src.ocr import (
+    mistral_ocr,
+    ocr_with_easyocr,
+    ocr_with_paddleocr,
+    preprocess,
+    preprocess_image,
+)
 from src.utils import get_first_page_image
 
 
