@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import chatbotService from "../services/chatbot";
 import "./ChatbotBubble.css";
 
 const ChatbotBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -31,6 +33,10 @@ const ChatbotBubble = () => {
   const toggleChat = () => {
     setIsOpen(!isOpen);
     setError(null);
+  };
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
   };
 
   const handleSendMessage = async (e) => {
@@ -87,15 +93,50 @@ const ChatbotBubble = () => {
   return (
     <>
       {isOpen && (
-        <div className="chatbot-window">
+        <div className={`chatbot-window ${isExpanded ? "expanded" : ""}`}>
           <div className="chatbot-header">
             <div className="chatbot-title">
               <div className="bot-avatar">🤖</div>
               <span>AI Expense Assistant</span>
             </div>
-            <button className="close-button" onClick={toggleChat}>
-              ×
-            </button>
+            <div className="header-controls">
+              <button
+                className="expand-button"
+                onClick={toggleExpand}
+                title={isExpanded ? "Minimize" : "Expand"}
+              >
+                {isExpanded ? (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M8 3V5H4V9H2V3H8ZM2 21V15H4V19H8V21H2ZM22 21H16V19H20V15H22V21ZM22 9H20V5H16V3H22V9Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3 3H9V5H5V9H3V3ZM3 21H5V17H9V15H3V21ZM15 21H21V15H19V17H15V21ZM21 3H15V5H19V9H21V3Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                )}
+              </button>
+              <button className="close-button" onClick={toggleChat}>
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="chatbot-messages">
@@ -106,7 +147,15 @@ const ChatbotBubble = () => {
                   message.sender === "user" ? "user-message" : "bot-message"
                 } ${message.isError ? "error-message" : ""}`}
               >
-                <div className="message-content">{message.text}</div>
+                <div className="message-content">
+                  {message.sender === "bot" ? (
+                    <div className="markdown-content">
+                      <ReactMarkdown>{message.text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    message.text
+                  )}
+                </div>
                 <div className="message-timestamp">{message.timestamp}</div>
               </div>
             ))}
