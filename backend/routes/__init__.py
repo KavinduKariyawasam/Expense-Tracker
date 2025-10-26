@@ -1,5 +1,6 @@
 from .auth import auth_route
 from .bill import bill_route
+from .chatbot import chatbot_route
 from .expense import expense_route
 from .income import income_route
 from .loan import loan_route
@@ -12,4 +13,5 @@ __app_include__ = [
     bill_route,
     auth_route,
     loan_route,
+    chatbot_route,
 ]

@@ -1,5 +1,6 @@
 import React from "react";
 import Navbar from "./Navbar";
+import ChatbotBubble from "./ChatbotBubble";
 import "./Layout.css";
 
 const Layout = ({ children }) => {
@@ -9,6 +10,7 @@ const Layout = ({ children }) => {
       <main className="layout-main">
         <div className="layout-content">{children}</div>
       </main>
+      <ChatbotBubble />
     </div>
   );
 };
