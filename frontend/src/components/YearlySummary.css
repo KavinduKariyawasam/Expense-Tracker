@@ -215,6 +215,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .month-card:hover {
@@ -228,41 +229,79 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.month-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #f093fb, #f5576c);
+  border-radius: 0 2px 2px 0;
+}
+
+.month-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
 }
 
 .month-name {
   font-weight: 700;
-  color: #2d3748;
-  font-size: 1.1rem;
+  color: #ffffff;
+  font-size: 1.2rem;
   letter-spacing: 0.5px;
+  text-transform: capitalize;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .month-change {
   font-size: 0.8rem;
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 2px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .month-change.positive {
-  background: #c6f6d5;
-  color: #276749;
+  background: rgba(72, 187, 120, 0.9);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .month-change.negative {
-  background: #fed7d7;
-  color: #c53030;
+  background: rgba(245, 101, 101, 0.9);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .month-change.neutral {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: rgba(160, 174, 192, 0.9);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .month-stats {
@@ -519,6 +558,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    padding: 12px 16px;
   }
 
   .overview-card,
