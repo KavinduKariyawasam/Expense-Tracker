@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import chatbotService from "../services/chatbot";
 import "./ChatbotBubble.css";
 
@@ -20,6 +21,7 @@ const ChatbotBubble = () => {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -54,12 +56,13 @@ const ChatbotBubble = () => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText("");
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await chatbotService.sendMessage(inputText);
+      const response = await chatbotService.sendMessage(currentInput);
 
       const botMessage = {
         id: Date.now() + 1,
@@ -72,11 +75,79 @@ const ChatbotBubble = () => {
       };
 
       setMessages((prev) => [...prev, botMessage]);
+      setRetryCount(0); // Reset retry count on success
     } catch (err) {
+      const newRetryCount = retryCount + 1;
+      setRetryCount(newRetryCount);
       setError(err.message);
+
+      let errorText = "Sorry, I encountered an error. ";
+
+      if (err.message.includes("401")) {
+        errorText +=
+          "Please check your authentication and try logging in again.";
+      } else if (err.message.includes("500")) {
+        errorText +=
+          "The server is temporarily unavailable. Please try again in a moment.";
+      } else if (
+        err.message.includes("Network Error") ||
+        err.message.includes("fetch")
+      ) {
+        errorText += "Please check your internet connection and try again.";
+      } else {
+        errorText += err.message;
+      }
+
+      if (newRetryCount < 3) {
+        errorText += " Click the retry button or try rephrasing your question.";
+      } else {
+        errorText +=
+          " The chatbot seems to be having persistent issues. Please refresh the page or try again later.";
+      }
+
       const errorMessage = {
         id: Date.now() + 1,
-        text: `Sorry, I encountered an error: ${err.message}`,
+        text: errorText,
+        sender: "bot",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        isError: true,
+        retryable: newRetryCount < 3,
+        originalInput: currentInput,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRetryMessage = async (originalInput) => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await chatbotService.sendMessage(originalInput);
+
+      const botMessage = {
+        id: Date.now() + 1,
+        text: response.response,
+        sender: "bot",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+      setRetryCount(0);
+    } catch (err) {
+      const errorMessage = {
+        id: Date.now() + 1,
+        text: "Retry failed. Please try a different question or refresh the page.",
         sender: "bot",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -150,7 +221,20 @@ const ChatbotBubble = () => {
                 <div className="message-content">
                   {message.sender === "bot" ? (
                     <div className="markdown-content">
-                      <ReactMarkdown>{message.text}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.text}
+                      </ReactMarkdown>
+                      {message.isError && message.retryable && (
+                        <button
+                          className="retry-button"
+                          onClick={() =>
+                            handleRetryMessage(message.originalInput)
+                          }
+                          disabled={isLoading}
+                        >
+                          🔄 Retry
+                        </button>
+                      )}
                     </div>
                   ) : (
                     message.text

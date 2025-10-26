@@ -68,9 +68,9 @@ def get_expense_summary(days: int) -> str:
         return f"Error retrieving expense summary: {str(e)}"
 
 @tool
-def get_spending_by_category() -> str:
+def get_spending_by_category(days: int) -> str:
     """
-    Get spending breakdown by category for the last 30 days.
+    Get spending breakdown by category for the last X days.
     
     Returns:
         A string breakdown of spending by category
@@ -79,7 +79,7 @@ def get_spending_by_category() -> str:
         if not _db_connection or not _current_user_id:
             return "Database connection or user not set"
         
-        days = 30
+        days = int(days)
         start_date = (datetime.now() - timedelta(days=days)).date()
         
         _db_connection.execute(
@@ -118,9 +118,9 @@ def get_spending_by_category() -> str:
         return f"Error retrieving category breakdown: {str(e)}"
 
 @tool
-def get_income_vs_expenses() -> str:
+def get_income_vs_expenses(days: int) -> str:
     """
-    Compare income vs expenses for the last 30 days.
+    Compare income vs expenses for the last X days.
     
     Returns:
         A string comparison of income vs expenses
@@ -129,7 +129,7 @@ def get_income_vs_expenses() -> str:
         if not _db_connection or not _current_user_id:
             return "Database connection or user not set"
         
-        days = 30
+        days = int(days)
         start_date = (datetime.now() - timedelta(days=days)).date()
         
         # Get expenses

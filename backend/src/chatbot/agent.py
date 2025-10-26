@@ -2,6 +2,7 @@
 from __future__ import annotations
 import os
 from typing import List, TypedDict
+from datetime import datetime
 
 from langchain_groq import ChatGroq
 from langchain_core.messages import AnyMessage, HumanMessage, AIMessage
@@ -47,11 +48,14 @@ class ExpenseTrackerAgent:
 
         # === 2) Prompts ===
         # For tool-calling step
+        today = datetime.now().date().isoformat()
+        
         prompt_tools = ChatPromptTemplate.from_messages([
             ("system",
              "You are an intelligent expense tracking assistant. "
              "If a tool is needed to answer, call exactly one tool. "
              "Prefer a single tool call; avoid multiple calls unless it is strictly necessary."
+             "For your reference, today's date is " + today + "."
             ),
             MessagesPlaceholder("messages"),
         ])
