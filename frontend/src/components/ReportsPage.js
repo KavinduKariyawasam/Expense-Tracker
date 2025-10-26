@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import YearlySummary from "./YearlySummary";
 import MonthlyAnalysis from "./MonthlyAnalysis";
+import CategoryBreakdown from "./CategoryBreakdown";
 import "./Reports.css";
 
 const Reports = () => {
@@ -56,14 +57,8 @@ const Reports = () => {
           </div>
         )}
         {activeTab === "category" && (
-          <div className="coming-soon">
-            <div className="coming-soon-icon">📊</div>
-            <h3>Category Breakdown</h3>
-            <p>Comprehensive category analysis coming soon!</p>
-            <small>
-              This feature will show spending patterns by category with
-              interactive charts.
-            </small>
+          <div className="report-section">
+            <CategoryBreakdown />
           </div>
         )}
         {activeTab === "trends" && (
