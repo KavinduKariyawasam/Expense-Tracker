@@ -210,17 +210,36 @@ const Expenses = () => {
     return (
       <div className="expenses-container">
         <div className="expenses-header">
-          <div className="header-left">
-            <button
-              className="back-btn"
-              onClick={() => navigate("/dashboard")}
-              title="Back to Dashboard"
-            >
-              ← Back
-            </button>
-            <h1>All Transactions</h1>
+          <div className="header-top">
+            <div className="header-left">
+              <button
+                className="back-btn"
+                onClick={() => navigate("/dashboard")}
+                title="Back to Dashboard"
+              >
+                ← Back
+              </button>
+              <h1>All Transactions</h1>
+            </div>
+            <div className="header-right">
+              <button
+                className="add-expense-btn"
+                onClick={() => setShowAddExpense(!showAddExpense)}
+                title={showAddExpense ? "Hide Add Expense" : "Add New Expense"}
+              >
+                {showAddExpense ? "✕ Close" : "➕ Add Expense"}
+              </button>
+            </div>
           </div>
         </div>
+
+        {showAddExpense && (
+          <AddExpense
+            onExpenseAdded={loadAllExpenses}
+            onCancel={() => setShowAddExpense(false)}
+          />
+        )}
+
         <div className="empty-state">
           <p>No transactions found</p>
           <p>Start by adding your first expense!</p>
