@@ -13,6 +13,7 @@ const Expenses = () => {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  const [expandedMonths, setExpandedMonths] = useState({});
 
   useEffect(() => {
     loadAllExpenses();
@@ -108,6 +109,29 @@ const Expenses = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const toggleMonthExpansion = (monthYear) => {
+    setExpandedMonths((prev) => ({
+      ...prev,
+      [monthYear]: !prev[monthYear],
+    }));
+  };
+
+  const getMostRecentMonth = () => {
+    const monthKeys = Object.keys(groupedExpenses);
+    if (monthKeys.length === 0) return null;
+
+    // Sort months by date and return the most recent
+    return monthKeys.sort((a, b) => new Date(b) - new Date(a))[0];
+  };
+
+  const isMonthExpanded = (monthYear) => {
+    // If no explicit state is set, only expand the most recent month
+    if (expandedMonths[monthYear] === undefined) {
+      return monthYear === getMostRecentMonth();
+    }
+    return expandedMonths[monthYear];
   };
 
   const calculateMonthTotal = (monthData) => {
@@ -314,187 +338,199 @@ const Expenses = () => {
           .sort(([a], [b]) => new Date(b) - new Date(a)) // Sort months descending
           .map(([monthYear, monthData]) => (
             <div key={monthYear} className="month-group">
-              <div className="month-header">
-                <h2>{monthYear}</h2>
+              <div
+                className="month-header clickable"
+                onClick={() => toggleMonthExpansion(monthYear)}
+              >
+                <div className="month-header-left">
+                  <span className="expand-icon">
+                    {isMonthExpanded(monthYear) ? "▼" : "▶"}
+                  </span>
+                  <h2>{monthYear}</h2>
+                </div>
                 <div className="month-total">
                   Total: {formatCurrency(calculateMonthTotal(monthData))}
                 </div>
               </div>
 
-              <div className="month-content">
-                {Object.entries(monthData)
-                  .sort(([a], [b]) => new Date(b) - new Date(a)) // Sort days descending
-                  .map(([dayDate, dayExpenses]) => (
-                    <div key={dayDate} className="day-group">
-                      <div className="day-header">
-                        <h3>{dayDate}</h3>
-                        <div className="day-total">
-                          {formatCurrency(calculateDayTotal(dayExpenses))}
+              {isMonthExpanded(monthYear) && (
+                <div className="month-content">
+                  {Object.entries(monthData)
+                    .sort(([a], [b]) => new Date(b) - new Date(a)) // Sort days descending
+                    .map(([dayDate, dayExpenses]) => (
+                      <div key={dayDate} className="day-group">
+                        <div className="day-header">
+                          <h3>{dayDate}</h3>
+                          <div className="day-total">
+                            {formatCurrency(calculateDayTotal(dayExpenses))}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="day-expenses">
-                        {dayExpenses
-                          .sort(
-                            (a, b) =>
-                              new Date(b.created_at || b.expense_date) -
-                              new Date(a.created_at || a.expense_date)
-                          )
-                          .map((expense) => (
-                            <div key={expense.id} className="expense-item">
-                              {editingExpense === expense.id ? (
-                                // Edit mode
-                                <div className="expense-edit-form">
-                                  <div className="edit-row">
-                                    <input
-                                      type="text"
-                                      placeholder="Description"
-                                      value={editFormData.description || ""}
-                                      onChange={(e) =>
-                                        handleEditFormChange(
-                                          "description",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="edit-input"
-                                    />
-                                    <input
-                                      type="text"
-                                      placeholder="Vendor (optional)"
-                                      value={editFormData.vendor || ""}
-                                      onChange={(e) =>
-                                        handleEditFormChange(
-                                          "vendor",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="edit-input"
-                                    />
-                                  </div>
-                                  <div className="edit-row">
-                                    <input
-                                      type="number"
-                                      placeholder="Amount"
-                                      value={editFormData.amount || ""}
-                                      onChange={(e) =>
-                                        handleEditFormChange(
-                                          "amount",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="edit-input"
-                                    />
-                                    <select
-                                      value={editFormData.category || ""}
-                                      onChange={(e) =>
-                                        handleEditFormChange(
-                                          "category",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="edit-input"
-                                    >
-                                      <option value="Food & Dining">
-                                        Food & Dining
-                                      </option>
-                                      <option value="Transportation">
-                                        Transportation
-                                      </option>
-                                      <option value="Shopping">Shopping</option>
-                                      <option value="Entertainment">
-                                        Entertainment
-                                      </option>
-                                      <option value="Bills & Utilities">
-                                        Bills & Utilities
-                                      </option>
-                                      <option value="Healthcare">
-                                        Healthcare
-                                      </option>
-                                      <option value="Education">
-                                        Education
-                                      </option>
-                                      <option value="Travel">Travel</option>
-                                      <option value="Other">Other</option>
-                                    </select>
-                                  </div>
-                                  <div className="edit-row">
-                                    <input
-                                      type="date"
-                                      value={editFormData.expense_date || ""}
-                                      onChange={(e) =>
-                                        handleEditFormChange(
-                                          "expense_date",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="edit-input"
-                                    />
-                                    <div className="edit-actions">
-                                      <button
-                                        onClick={handleSaveEdit}
-                                        className="save-btn"
+                        <div className="day-expenses">
+                          {dayExpenses
+                            .sort(
+                              (a, b) =>
+                                new Date(b.created_at || b.expense_date) -
+                                new Date(a.created_at || a.expense_date)
+                            )
+                            .map((expense) => (
+                              <div key={expense.id} className="expense-item">
+                                {editingExpense === expense.id ? (
+                                  // Edit mode
+                                  <div className="expense-edit-form">
+                                    <div className="edit-row">
+                                      <input
+                                        type="text"
+                                        placeholder="Description"
+                                        value={editFormData.description || ""}
+                                        onChange={(e) =>
+                                          handleEditFormChange(
+                                            "description",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="edit-input"
+                                      />
+                                      <input
+                                        type="text"
+                                        placeholder="Vendor (optional)"
+                                        value={editFormData.vendor || ""}
+                                        onChange={(e) =>
+                                          handleEditFormChange(
+                                            "vendor",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="edit-input"
+                                      />
+                                    </div>
+                                    <div className="edit-row">
+                                      <input
+                                        type="number"
+                                        placeholder="Amount"
+                                        value={editFormData.amount || ""}
+                                        onChange={(e) =>
+                                          handleEditFormChange(
+                                            "amount",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="edit-input"
+                                      />
+                                      <select
+                                        value={editFormData.category || ""}
+                                        onChange={(e) =>
+                                          handleEditFormChange(
+                                            "category",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="edit-input"
                                       >
-                                        ✓ Save
-                                      </button>
-                                      <button
-                                        onClick={handleCancelEdit}
-                                        className="cancel-btn"
-                                      >
-                                        ✕ Cancel
-                                      </button>
+                                        <option value="Food & Dining">
+                                          Food & Dining
+                                        </option>
+                                        <option value="Transportation">
+                                          Transportation
+                                        </option>
+                                        <option value="Shopping">
+                                          Shopping
+                                        </option>
+                                        <option value="Entertainment">
+                                          Entertainment
+                                        </option>
+                                        <option value="Bills & Utilities">
+                                          Bills & Utilities
+                                        </option>
+                                        <option value="Healthcare">
+                                          Healthcare
+                                        </option>
+                                        <option value="Education">
+                                          Education
+                                        </option>
+                                        <option value="Travel">Travel</option>
+                                        <option value="Other">Other</option>
+                                      </select>
+                                    </div>
+                                    <div className="edit-row">
+                                      <input
+                                        type="date"
+                                        value={editFormData.expense_date || ""}
+                                        onChange={(e) =>
+                                          handleEditFormChange(
+                                            "expense_date",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="edit-input"
+                                      />
+                                      <div className="edit-actions">
+                                        <button
+                                          onClick={handleSaveEdit}
+                                          className="save-btn"
+                                        >
+                                          ✓ Save
+                                        </button>
+                                        <button
+                                          onClick={handleCancelEdit}
+                                          className="cancel-btn"
+                                        >
+                                          ✕ Cancel
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ) : (
-                                // View mode
-                                <>
-                                  <div className="expense-main">
-                                    <div className="expense-description">
-                                      <span className="description">
-                                        {expense.description}
-                                      </span>
-                                      {expense.vendor && (
-                                        <span className="vendor">
-                                          @ {expense.vendor}
+                                ) : (
+                                  // View mode
+                                  <>
+                                    <div className="expense-main">
+                                      <div className="expense-description">
+                                        <span className="description">
+                                          {expense.description}
                                         </span>
-                                      )}
-                                    </div>
-                                    <div className="expense-amount">
-                                      {formatCurrency(expense.amount)}
-                                    </div>
-                                  </div>
-                                  <div className="expense-meta">
-                                    <div className="expense-info">
-                                      <span className="category">
-                                        {expense.category}
-                                      </span>
-                                      {expense.items &&
-                                        expense.items.length > 0 && (
-                                          <span className="items-count">
-                                            {expense.items.length} items
+                                        {expense.vendor && (
+                                          <span className="vendor">
+                                            @ {expense.vendor}
                                           </span>
                                         )}
+                                      </div>
+                                      <div className="expense-amount">
+                                        {formatCurrency(expense.amount)}
+                                      </div>
                                     </div>
-                                    <div className="expense-actions">
-                                      <button
-                                        onClick={() =>
-                                          handleEditExpense(expense)
-                                        }
-                                        className="edit-btn"
-                                        title="Edit expense"
-                                      >
-                                        ✏️
-                                      </button>
+                                    <div className="expense-meta">
+                                      <div className="expense-info">
+                                        <span className="category">
+                                          {expense.category}
+                                        </span>
+                                        {expense.items &&
+                                          expense.items.length > 0 && (
+                                            <span className="items-count">
+                                              {expense.items.length} items
+                                            </span>
+                                          )}
+                                      </div>
+                                      <div className="expense-actions">
+                                        <button
+                                          onClick={() =>
+                                            handleEditExpense(expense)
+                                          }
+                                          className="edit-btn"
+                                          title="Edit expense"
+                                        >
+                                          ✏️
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ))}
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-              </div>
+                    ))}
+                </div>
+              )}
             </div>
           ))}
       </div>
