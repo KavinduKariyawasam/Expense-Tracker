@@ -1,11 +1,8 @@
 import cv2
 import numpy as np
+
 from src.analyze import categorize_and_sum_items, parse_invoice
-from src.ocr import (
-    mistral_ocr,
-    ocr_with_easyocr,
-    preprocess_image,
-)
+from src.ocr import mistral_ocr, ocr_with_easyocr, preprocess_image
 from src.utils import get_first_page_image
 
 

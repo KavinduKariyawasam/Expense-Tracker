@@ -1,18 +1,13 @@
-from datetime import date
 from typing import List
 
-from auth import get_current_user
-from logger import get_logger
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
-from models.schemas import (
-    LoanCreate,
-    LoanOut,
-    LoanSummary,
-    LoanTransactionCreate,
-    LoanTransactionOut,
-    LoanUpdate,
-)
+
+from auth import get_current_user
+from database import get_db
+from logger import get_logger
+from models.schemas import (LoanCreate, LoanOut, LoanSummary,
+                            LoanTransactionCreate, LoanTransactionOut,
+                            LoanUpdate)
 
 logger = get_logger(__name__)
 
@@ -20,9 +15,7 @@ loan_route = APIRouter(prefix="/loans", tags=["loans"])
 
 
 @loan_route.post("/", response_model=LoanOut)
-def create_loan(
-    loan: LoanCreate, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def create_loan(loan: LoanCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Create a new loan"""
     try:
         # Insert loan
@@ -102,7 +95,7 @@ def get_loans(
         )
 
         loans = db.fetchall()
-        
+
         logger.info(f"Retrieved {len(loans)} loans for user {current_user['username']}")
 
         # Get transactions for each loan
@@ -122,8 +115,8 @@ def get_loans(
             transactions = db.fetchall()
             result.append({**loan, "transactions": transactions})
 
-        logger.info(f"Successfully retrieved loans and their transactions")
-        
+        logger.info("Successfully retrieved loans and their transactions")
+
         return result
 
     except Exception as e:
@@ -160,9 +153,7 @@ def get_loan_summary(db=Depends(get_db), current_user=Depends(get_current_user))
             "total_loans_given": float(summary["total_loans_given"] or 0),
             "total_loans_received": float(summary["total_loans_received"] or 0),
             "total_outstanding_given": float(summary["total_outstanding_given"] or 0),
-            "total_outstanding_received": float(
-                summary["total_outstanding_received"] or 0
-            ),
+            "total_outstanding_received": float(summary["total_outstanding_received"] or 0),
             "active_loans_given": int(summary["active_loans_given"] or 0),
             "active_loans_received": int(summary["active_loans_received"] or 0),
             "overdue_loans_given": int(summary["overdue_loans_given"] or 0),
@@ -208,7 +199,7 @@ def get_loan(loan_id: int, db=Depends(get_db), current_user=Depends(get_current_
             (loan_id,),
         )
         transactions = db.fetchall()
-        
+
         logger.info(f"Successfully retrieved loan ID: {loan_id} and its transactions")
 
         return {**loan, "transactions": transactions}
@@ -281,7 +272,7 @@ def update_loan(
 
         db.execute(update_query, values)
         updated_loan = db.fetchone()
-        
+
         logger.info(f"Successfully updated loan ID: {loan_id}")
 
         # Get transactions
@@ -296,7 +287,7 @@ def update_loan(
             (loan_id,),
         )
         transactions = db.fetchall()
-        
+
         logger.info(f"Retrieved transactions for updated loan ID: {loan_id}")
 
         return {**updated_loan, "transactions": transactions}
@@ -310,9 +301,7 @@ def update_loan(
 
 
 @loan_route.delete("/{loan_id}")
-def delete_loan(
-    loan_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def delete_loan(loan_id: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Delete loan"""
     try:
         # Check if loan exists and belongs to user
@@ -331,7 +320,7 @@ def delete_loan(
             (loan_id, current_user["id"]),
         )
         logger.info(f"Successfully deleted loan ID: {loan_id}")
-        
+
         return {"message": "Loan deleted successfully"}
 
     except HTTPException:
@@ -378,9 +367,9 @@ def add_loan_transaction(
         )
 
         new_transaction = db.fetchone()
-        
+
         logger.info(f"Transaction added with ID: {new_transaction['id']} to loan ID: {loan_id}")
-        
+
         return new_transaction
 
     except HTTPException:
@@ -392,9 +381,7 @@ def add_loan_transaction(
 
 
 @loan_route.get("/{loan_id}/transactions", response_model=List[LoanTransactionOut])
-def get_loan_transactions(
-    loan_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def get_loan_transactions(loan_id: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Get all transactions for a specific loan"""
     try:
         # Check if loan exists and belongs to user
@@ -418,7 +405,7 @@ def get_loan_transactions(
         """,
             (loan_id,),
         )
-        
+
         logger.info(f"Successfully retrieved transactions for loan ID: {loan_id}")
 
         return db.fetchall()
@@ -487,8 +474,8 @@ def delete_loan_transaction(
             db.execute(
                 "UPDATE loans SET current_balance = current_balance - %s WHERE id = %s",
                 (transaction["amount"], loan_id),
-            )   
-        
+            )
+
         logger.info(f"Successfully deleted transaction ID: {transaction_id} from loan ID: {loan_id}")
 
         return {"message": "Transaction deleted successfully"}

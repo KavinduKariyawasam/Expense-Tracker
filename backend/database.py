@@ -1,5 +1,4 @@
 import os
-from json import load
 
 import psycopg2
 import psycopg2.extras

@@ -7,7 +7,7 @@ import numpy as np
 from dotenv import load_dotenv
 from scipy.fftpack import dct, idct
 from scipy.ndimage import binary_fill_holes
-from skimage import color, filters, io, measure, morphology
+from skimage import color, filters, measure, morphology
 
 load_dotenv()
 # Set up logging
@@ -50,9 +50,7 @@ def preprocess_image(img):
     mask = mask == 1 + np.argmax([r.filled_area for r in measure.regionprops(mask)])
 
     mask_uint8 = (mask * 255).astype(np.uint8)
-    contours, _ = cv2.findContours(
-        mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
+    contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     largest_contour = max(contours, key=cv2.contourArea)
 
     epsilon = 0.02 * cv2.arcLength(largest_contour, True)
@@ -78,9 +76,7 @@ def preprocess_image(img):
     maxHeight = int(max(heightA, heightB))
 
     if maxWidth < 10 or maxHeight < 10:
-        logging.warning(
-            "Image dimensions are too small for warping, returning original image."
-        )
+        logging.warning("Image dimensions are too small for warping, returning original image.")
         warped = (img * 255).astype(np.uint8)
     else:
         # desired destination points for the warped image
@@ -99,9 +95,7 @@ def preprocess_image(img):
         warped = cv2.warpPerspective(img, M, (maxWidth, maxHeight))
 
     gray_col = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-    gray_col = cv2.fastNlMeansDenoising(
-        gray_col, None, h=11, templateWindowSize=31, searchWindowSize=9
-    )
+    gray_col = cv2.fastNlMeansDenoising(gray_col, None, h=11, templateWindowSize=31, searchWindowSize=9)
 
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     gray_col = clahe.apply(gray_col)  # boosts faint print
@@ -117,7 +111,5 @@ def preprocess_image(img):
 def preprocess(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_COLOR)
     pre = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    denoised = cv2.fastNlMeansDenoising(
-        pre, None, h=11, templateWindowSize=31, searchWindowSize=9
-    )
+    denoised = cv2.fastNlMeansDenoising(pre, None, h=11, templateWindowSize=31, searchWindowSize=9)
     return denoised

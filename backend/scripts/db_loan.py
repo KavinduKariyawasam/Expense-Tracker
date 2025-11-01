@@ -213,22 +213,16 @@ def drop_tables():
         print("Dropping loan management tables...")
 
         # Drop triggers first
-        cursor.execute(
-            "DROP TRIGGER IF EXISTS trigger_update_loan_balance ON loan_transactions;"
-        )
+        cursor.execute("DROP TRIGGER IF EXISTS trigger_update_loan_balance ON loan_transactions;")
         cursor.execute("DROP TRIGGER IF EXISTS trigger_update_loan_status ON loans;")
-        cursor.execute(
-            "DROP TRIGGER IF EXISTS trigger_update_loans_updated_at ON loans;"
-        )
+        cursor.execute("DROP TRIGGER IF EXISTS trigger_update_loans_updated_at ON loans;")
 
         # Drop tables (loan_transactions first due to foreign key)
         cursor.execute("DROP TABLE IF EXISTS loan_transactions CASCADE;")
         cursor.execute("DROP TABLE IF EXISTS loans CASCADE;")
 
         # Drop functions
-        cursor.execute(
-            "DROP FUNCTION IF EXISTS update_loan_balance_after_transaction();"
-        )
+        cursor.execute("DROP FUNCTION IF EXISTS update_loan_balance_after_transaction();")
         cursor.execute("DROP FUNCTION IF EXISTS update_loan_status();")
         cursor.execute("DROP FUNCTION IF EXISTS update_loans_updated_at();")
 

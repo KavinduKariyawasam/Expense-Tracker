@@ -1,9 +1,10 @@
 from typing import List
 
-from auth import get_current_user
-from logger import get_logger
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
+
+from auth import get_current_user
+from database import get_db
+from logger import get_logger
 from models.schemas import IncomeCreate, IncomeOut, IncomeUpdate
 
 logger = get_logger(__name__)
@@ -12,9 +13,7 @@ income_route = APIRouter(prefix="/income", tags=["income"])
 
 
 @income_route.post("/", response_model=IncomeOut)
-def create_income(
-    income: IncomeCreate, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def create_income(income: IncomeCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Create a new income"""
     try:
         # Insert income
@@ -61,7 +60,7 @@ def create_income(
                 items.append(db.fetchone())
 
         logger.info(f"Successfully created income ID {income_id} with {len(items)} items")
-        
+
         # Return income with items
         return {**new_income, "items": items}
 
@@ -108,7 +107,7 @@ def get_income(
             )
             items = db.fetchall()
             result.append({**income_record, "items": items})
-            
+
         logger.info(f"Successfully fetched {len(result)} income records for user {current_user['username']}")
 
         return result
@@ -119,9 +118,7 @@ def get_income(
 
 
 @income_route.get("/{income_id}", response_model=IncomeOut)
-def get_income_by_id(
-    income_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def get_income_by_id(income_id: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Get specific income"""
     try:
         # Get income
@@ -150,7 +147,7 @@ def get_income_by_id(
             (income_id,),
         )
         items = db.fetchall()
-        
+
         logger.info(f"Successfully fetched income ID {income_id} for user {current_user['username']}")
 
         return {**income_record, "items": items}
@@ -230,7 +227,7 @@ def update_income(
             (income_id,),
         )
         items = db.fetchall()
-        
+
         logger.info(f"Successfully updated income ID {income_id} for user {current_user['username']}")
 
         return {**updated_income, "items": items}
@@ -244,9 +241,7 @@ def update_income(
 
 
 @income_route.delete("/{income_id}")
-def delete_income(
-    income_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def delete_income(income_id: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Delete income"""
     try:
         # Check if income exists and belongs to user
@@ -264,7 +259,7 @@ def delete_income(
             "DELETE FROM income WHERE id = %s AND user_id = %s",
             (income_id, current_user["id"]),
         )
-        
+
         logger.info(f"Successfully deleted income ID {income_id} for user {current_user['username']}")
 
         return {"message": "Income deleted successfully"}

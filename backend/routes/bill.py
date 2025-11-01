@@ -1,10 +1,11 @@
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
-from auth import get_current_user
-from logger import get_logger
-from database import get_db
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+
+from auth import get_current_user
+from database import get_db
+from logger import get_logger
 from models.schemas import BillData
 from utils import run_ocr_only_bytes
 
@@ -52,9 +53,7 @@ async def upload_bill(
 
 # Update the save_bill_expenses endpoint
 @bill_route.post("/save-bill-expenses")
-def save_bill_expenses(
-    bill_data: BillData, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def save_bill_expenses(bill_data: BillData, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Save parsed bill data as individual expenses for each item"""
     try:
         saved_expenses = []
@@ -62,11 +61,7 @@ def save_bill_expenses(
         # Parse the invoice date
         try:
             logger.info(f"Parsing invoice date: {bill_data.invoice_date}")
-            expense_date = (
-                date.fromisoformat(bill_data.invoice_date)
-                if bill_data.invoice_date
-                else date.today()
-            )
+            expense_date = date.fromisoformat(bill_data.invoice_date) if bill_data.invoice_date else date.today()
         except ValueError:
             logger.warning(f"Invalid invoice date format: {bill_data.invoice_date}, using today's date")
             expense_date = date.today()
@@ -76,15 +71,9 @@ def save_bill_expenses(
         for item in bill_data.items:
             logger.debug(f"Processing item: {item.description}")
             # Convert to Decimal for precise calculations
-            quantity = Decimal(str(item.quantity)).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
-            unit_price = Decimal(str(item.unit_price)).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
-            )
-            line_total = Decimal(str(item.line_total)).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
-            )
+            quantity = Decimal(str(item.quantity)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            unit_price = Decimal(str(item.unit_price)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            line_total = Decimal(str(item.line_total)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
             # Insert expense for this item
             logger.debug(f"Inserting expense for item: {item.description}")

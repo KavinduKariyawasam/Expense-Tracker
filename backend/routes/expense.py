@@ -2,10 +2,11 @@ import os
 import sys
 from typing import List
 
-from auth import get_current_user
-from logger import get_logger
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
+
+from auth import get_current_user
+from database import get_db
+from logger import get_logger
 from models.schemas import ExpenseCreate, ExpenseOut, ExpenseUpdate
 
 # Add parent directory to path for imports
@@ -19,9 +20,7 @@ expense_route = APIRouter(prefix="/expenses", tags=["expenses"])
 
 # Expense endpoints
 @expense_route.post("/", response_model=ExpenseOut)
-def create_expense(
-    expense: ExpenseCreate, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def create_expense(expense: ExpenseCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Create a new expense"""
     try:
         logger.info(f"User {current_user['username']} is creating a new expense: {expense.description}")
@@ -123,9 +122,7 @@ def get_expenses(
 
 
 @expense_route.get("/{expense_id}", response_model=ExpenseOut)
-def get_expense(
-    expense_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def get_expense(expense_id: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Get specific expense"""
     try:
         # Get expense
@@ -154,7 +151,7 @@ def get_expense(
             (expense_id,),
         )
         items = db.fetchall()
-        
+
         logger.info(f"Successfully fetched expense ID: {expense_id} with {len(items)} items")
 
         return {**expense, "items": items}
@@ -205,7 +202,7 @@ def update_expense(
         if expense.expense_date is not None:
             updates.append("expense_date = %s")
             values.append(expense.expense_date)
-            
+
         logger.debug(f"Update fields for expense ID {expense_id}: {updates}")
 
         if not updates:
@@ -225,7 +222,7 @@ def update_expense(
 
         db.execute(update_query, values)
         updated_expense = db.fetchone()
-        
+
         logger.info(f"Successfully updated expense ID: {expense_id}")
 
         # Get items
@@ -238,7 +235,7 @@ def update_expense(
             (expense_id,),
         )
         items = db.fetchall()
-        
+
         logger.info(f"Fetched {len(items)} items for updated expense ID: {expense_id}")
 
         return {**updated_expense, "items": items}
@@ -252,9 +249,7 @@ def update_expense(
 
 
 @expense_route.delete("/{expense_id}")
-def delete_expense(
-    expense_id: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def delete_expense(expense_id: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Delete expense"""
     try:
         # Check if expense exists and belongs to user
@@ -272,7 +267,7 @@ def delete_expense(
             "DELETE FROM expenses WHERE id = %s AND user_id = %s",
             (expense_id, current_user["id"]),
         )
-        
+
         logger.info(f"Successfully deleted expense ID: {expense_id}")
 
         return {"message": "Expense deleted successfully"}

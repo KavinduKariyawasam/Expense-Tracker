@@ -4,6 +4,7 @@ import re
 
 from dotenv import load_dotenv
 from groq import Groq
+
 from logger import get_logger
 
 load_dotenv()
@@ -56,9 +57,7 @@ def parse_invoice(ocr_text):
         {"role": "user", "content": USER_PROMPT_TEMPLATE.format(ocr_text=ocr_text)},
     ]
 
-    response = client.chat.completions.create(
-        model=GROQ_MODEL, messages=messages, max_tokens=1024, temperature=0.4
-    )
+    response = client.chat.completions.create(model=GROQ_MODEL, messages=messages, max_tokens=1024, temperature=0.4)
 
     content = response.choices[0].message.content
 
@@ -69,9 +68,7 @@ def parse_invoice(ocr_text):
     try:
         parsed = json.loads(content_clean)
     except json.JSONDecodeError:
-        raise ValueError(
-            f"Failed to parse JSON from GroqChat response: {content_clean}"
-        )
+        raise ValueError(f"Failed to parse JSON from GroqChat response: {content_clean}")
     return parsed
 
 
@@ -96,9 +93,7 @@ def categorize_and_sum_items(items):
         {"role": "user", "content": CATEGORY_PROMPT},
     ]
 
-    response = client.chat.completions.create(
-        model=GROQ_MODEL, messages=messages, max_tokens=1024, temperature=0.6
-    )
+    response = client.chat.completions.create(model=GROQ_MODEL, messages=messages, max_tokens=1024, temperature=0.6)
 
     content = response.choices[0].message.content.strip()
 

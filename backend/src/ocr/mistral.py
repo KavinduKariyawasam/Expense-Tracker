@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from dotenv import load_dotenv
 from mistralai import Mistral
+
 from logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,9 +32,7 @@ def mistral_ocr(preprocessed):
     logger.info("Starting OCR with Mistral...")
 
     if preprocessed.dtype != np.uint8:
-        preprocessed = cv2.normalize(
-            preprocessed, None, 0, 255, cv2.NORM_MINMAX
-        ).astype(np.uint8)
+        preprocessed = cv2.normalize(preprocessed, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
     jpeg_bytes = jpeg_bytes_from_ndarray(preprocessed)
     b64_payload = base64_from_bytes(jpeg_bytes)

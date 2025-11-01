@@ -1,15 +1,17 @@
 # agent.py  (LangGraph-based)
 from __future__ import annotations
-import os
-from typing import List, TypedDict
-from datetime import datetime
 
-from langchain_groq import ChatGroq
-from langchain_core.messages import AnyMessage, HumanMessage, AIMessage
+import os
+from datetime import datetime
+from typing import List, TypedDict
+
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langgraph.graph import StateGraph, END
+from langchain_groq import ChatGroq
+from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode  # executes LangChain tools
-from .tools import AVAILABLE_TOOLS, set_db_connection, set_current_user
+
+from .tools import AVAILABLE_TOOLS, set_current_user, set_db_connection
 
 
 # Graph state: a list of messages that grows as the agent runs
@@ -49,27 +51,33 @@ class ExpenseTrackerAgent:
         # === 2) Prompts ===
         # For tool-calling step
         today = datetime.now().date().isoformat()
-        
-        prompt_tools = ChatPromptTemplate.from_messages([
-            ("system",
-             "You are an intelligent expense tracking assistant. "
-             "If a tool is needed to answer, call exactly one tool. "
-             "Prefer a single tool call; avoid multiple calls unless it is strictly necessary."
-             "For your reference, today's date is " + today + "."
-            ),
-            MessagesPlaceholder("messages"),
-        ])
+
+        prompt_tools = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are an intelligent expense tracking assistant. "
+                    "If a tool is needed to answer, call exactly one tool. "
+                    "Prefer a single tool call; avoid multiple calls unless it is strictly necessary."
+                    "For your reference, today's date is " + today + ".",
+                ),
+                MessagesPlaceholder("messages"),
+            ]
+        )
 
         # For finalization: summarize & answer using tool results now in the transcript
-        prompt_final = ChatPromptTemplate.from_messages([
-            ("system",
-             "You are an intelligent expense tracking assistant. "
-             "Now produce the FINAL answer for the user based on the conversation and any tool outputs. "
-             "Do NOT call tools. Write a clear, helpful response with numbers and a brief explanation."
-             "Use the MARKDOWN format to present tables and lists clearly."
-            ),
-            MessagesPlaceholder("messages"),
-        ])
+        prompt_final = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are an intelligent expense tracking assistant. "
+                    "Now produce the FINAL answer for the user based on the conversation and any tool outputs. "
+                    "Do NOT call tools. Write a clear, helpful response with numbers and a brief explanation."
+                    "Use the MARKDOWN format to present tables and lists clearly.",
+                ),
+                MessagesPlaceholder("messages"),
+            ]
+        )
 
         chain_tools = prompt_tools | llm_tools
         chain_final = prompt_final | llm_final
@@ -114,7 +122,7 @@ class ExpenseTrackerAgent:
         final = self.app.invoke(state)
         last_ai = next((m for m in reversed(final["messages"]) if isinstance(m, AIMessage)), None)
         return last_ai.content if last_ai else ""
-        
+
 
 # Initialize the agent with tools
 expense_tracker_agent = ExpenseTrackerAgent()

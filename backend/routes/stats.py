@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 
-from auth import get_current_user
-from logger import get_logger
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
+
+from auth import get_current_user
+from database import get_db
+from logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -130,24 +131,12 @@ def get_dashboard_stats(db=Depends(get_db), current_user=Depends(get_current_use
             "monthly_expenses": monthly_expenses,
             "monthly_income": monthly_income,
             "monthly_net": monthly_income - monthly_expenses,
-            "total_expense_categories": int(
-                expense_categories_result["expense_categories_count"] or 0
-            ),
-            "total_income_categories": int(
-                income_categories_result["income_categories_count"] or 0
-            ),
-            "recent_expense_transactions": int(
-                recent_expense_result["recent_expense_transactions"] or 0
-            ),
-            "recent_income_transactions": int(
-                recent_income_result["recent_income_transactions"] or 0
-            ),
-            "total_expense_transactions": int(
-                expense_result["total_expense_transactions"] or 0
-            ),
-            "total_income_transactions": int(
-                income_result["total_income_transactions"] or 0
-            ),
+            "total_expense_categories": int(expense_categories_result["expense_categories_count"] or 0),
+            "total_income_categories": int(income_categories_result["income_categories_count"] or 0),
+            "recent_expense_transactions": int(recent_expense_result["recent_expense_transactions"] or 0),
+            "recent_income_transactions": int(recent_income_result["recent_income_transactions"] or 0),
+            "total_expense_transactions": int(expense_result["total_expense_transactions"] or 0),
+            "total_income_transactions": int(income_result["total_income_transactions"] or 0),
         }
 
     except Exception as e:
@@ -156,9 +145,7 @@ def get_dashboard_stats(db=Depends(get_db), current_user=Depends(get_current_use
 
 
 @stats_route.get("/yearly-stats/{year}")
-def get_yearly_stats(
-    year: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def get_yearly_stats(year: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Get yearly statistics with monthly breakdown for both expenses and income"""
     try:
         user_id = current_user["id"]
@@ -249,12 +236,8 @@ def get_yearly_stats(
 
         # Build complete monthly breakdown
         for month_num in range(1, 13):
-            expense_data = expense_monthly_dict.get(
-                month_num, {"month_total": 0, "month_transactions": 0}
-            )
-            income_data = income_monthly_dict.get(
-                month_num, {"month_total": 0, "month_transactions": 0}
-            )
+            expense_data = expense_monthly_dict.get(month_num, {"month_total": 0, "month_transactions": 0})
+            income_data = income_monthly_dict.get(month_num, {"month_total": 0, "month_transactions": 0})
 
             expense_total = float(expense_data["month_total"])
             income_total = float(income_data["month_total"])
@@ -283,12 +266,8 @@ def get_yearly_stats(
             "year_expense_total": year_expense_total,
             "year_income_total": year_income_total,
             "year_net_total": year_net_total,
-            "year_expense_transactions": int(
-                year_expense_totals["year_transactions"] or 0
-            ),
-            "year_income_transactions": int(
-                year_income_totals["year_transactions"] or 0
-            ),
+            "year_expense_transactions": int(year_expense_totals["year_transactions"] or 0),
+            "year_income_transactions": int(year_income_totals["year_transactions"] or 0),
             "year_expense_categories": int(year_expense_totals["year_categories"] or 0),
             "year_income_categories": int(year_income_totals["year_categories"] or 0),
             "avg_monthly_expense": round(avg_monthly_expense, 2),
@@ -333,18 +312,14 @@ def get_available_years(db=Depends(get_db), current_user=Depends(get_current_use
 
 
 @stats_route.get("/monthly-stats/{year}/{month}")
-def get_monthly_stats(
-    year: int, month: int, db=Depends(get_db), current_user=Depends(get_current_user)
-):
+def get_monthly_stats(year: int, month: int, db=Depends(get_db), current_user=Depends(get_current_user)):
     """Get detailed monthly statistics with daily breakdown, category analysis, and weekly summary"""
     try:
         user_id = current_user["id"]
 
         # Validate month
         if month < 1 or month > 12:
-            raise HTTPException(
-                status_code=400, detail="Month must be between 1 and 12"
-            )
+            raise HTTPException(status_code=400, detail="Month must be between 1 and 12")
 
         # Get monthly totals
         db.execute(
@@ -529,9 +504,7 @@ def get_monthly_stats(
 
         weekly_summary = []
         for row in weekly_data:
-            start_date = (
-                row["start_date"].strftime("%b %d") if row["start_date"] else ""
-            )
+            start_date = row["start_date"].strftime("%b %d") if row["start_date"] else ""
             end_date = row["end_date"].strftime("%b %d") if row["end_date"] else ""
             date_range = f"{start_date} - {end_date}" if start_date and end_date else ""
 
@@ -565,23 +538,23 @@ def get_monthly_stats(
 
 @stats_route.get("/category-stats")
 def get_category_stats(
-    period: str = "all", 
-    year: int = None, 
+    period: str = "all",
+    year: int = None,
     month: int = None,
-    db=Depends(get_db), 
-    current_user=Depends(get_current_user)
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
     """Get comprehensive category analysis with period filtering"""
     try:
         user_id = current_user["id"]
-        
+
         # Build base parameters
         base_params = [user_id]
-        
+
         # Build date conditions based on period
         expense_date_condition = "WHERE user_id = %s"
         income_date_condition = "WHERE user_id = %s"
-        
+
         if period == "year" and year:
             expense_date_condition += " AND EXTRACT(YEAR FROM expense_date) = %s"
             income_date_condition += " AND EXTRACT(YEAR FROM income_date) = %s"
@@ -607,7 +580,7 @@ def get_category_stats(
         else:
             expense_params = base_params
             income_params = base_params
-        
+
         # Get expense categories with stats
         db.execute(
             f"""
@@ -625,10 +598,10 @@ def get_category_stats(
             GROUP BY category
             ORDER BY total_amount DESC
         """,
-            expense_params
+            expense_params,
         )
         expense_categories = db.fetchall()
-        
+
         # Get income categories with stats
         db.execute(
             f"""
@@ -646,54 +619,58 @@ def get_category_stats(
             GROUP BY category
             ORDER BY total_amount DESC
         """,
-            income_params
+            income_params,
         )
         income_categories = db.fetchall()
-        
+
         # Calculate totals for percentage calculations
         total_expenses = sum(float(cat["total_amount"]) for cat in expense_categories)
         total_income = sum(float(cat["total_amount"]) for cat in income_categories)
-        
+
         # Format expense categories with additional stats
         formatted_expense_categories = []
         for cat in expense_categories:
             percentage = (float(cat["total_amount"]) / total_expenses * 100) if total_expenses > 0 else 0
-            formatted_expense_categories.append({
-                "category": cat["category"],
-                "total_amount": float(cat["total_amount"]),
-                "transaction_count": int(cat["transaction_count"]),
-                "percentage": round(percentage, 2),
-                "avg_amount": round(float(cat["avg_amount"]), 2),
-                "min_amount": float(cat["min_amount"]),
-                "max_amount": float(cat["max_amount"]),
-                "first_transaction": cat["first_transaction"].isoformat() if cat["first_transaction"] else None,
-                "last_transaction": cat["last_transaction"].isoformat() if cat["last_transaction"] else None,
-            })
-        
+            formatted_expense_categories.append(
+                {
+                    "category": cat["category"],
+                    "total_amount": float(cat["total_amount"]),
+                    "transaction_count": int(cat["transaction_count"]),
+                    "percentage": round(percentage, 2),
+                    "avg_amount": round(float(cat["avg_amount"]), 2),
+                    "min_amount": float(cat["min_amount"]),
+                    "max_amount": float(cat["max_amount"]),
+                    "first_transaction": (cat["first_transaction"].isoformat() if cat["first_transaction"] else None),
+                    "last_transaction": (cat["last_transaction"].isoformat() if cat["last_transaction"] else None),
+                }
+            )
+
         # Format income categories with additional stats
         formatted_income_categories = []
         for cat in income_categories:
             percentage = (float(cat["total_amount"]) / total_income * 100) if total_income > 0 else 0
-            formatted_income_categories.append({
-                "category": cat["category"],
-                "total_amount": float(cat["total_amount"]),
-                "transaction_count": int(cat["transaction_count"]),
-                "percentage": round(percentage, 2),
-                "avg_amount": round(float(cat["avg_amount"]), 2),
-                "min_amount": float(cat["min_amount"]),
-                "max_amount": float(cat["max_amount"]),
-                "first_transaction": cat["first_transaction"].isoformat() if cat["first_transaction"] else None,
-                "last_transaction": cat["last_transaction"].isoformat() if cat["last_transaction"] else None,
-            })
-        
+            formatted_income_categories.append(
+                {
+                    "category": cat["category"],
+                    "total_amount": float(cat["total_amount"]),
+                    "transaction_count": int(cat["transaction_count"]),
+                    "percentage": round(percentage, 2),
+                    "avg_amount": round(float(cat["avg_amount"]), 2),
+                    "min_amount": float(cat["min_amount"]),
+                    "max_amount": float(cat["max_amount"]),
+                    "first_transaction": (cat["first_transaction"].isoformat() if cat["first_transaction"] else None),
+                    "last_transaction": (cat["last_transaction"].isoformat() if cat["last_transaction"] else None),
+                }
+            )
+
         # Get monthly trends for top 5 expense categories
         top_expense_categories = [cat["category"] for cat in formatted_expense_categories[:5]]
         monthly_trends = {}
-        
+
         if top_expense_categories:
             category_placeholders = ",".join(["%s"] * len(top_expense_categories))
             trend_params = [user_id] + top_expense_categories
-            
+
             db.execute(
                 f"""
                 SELECT 
@@ -709,21 +686,23 @@ def get_category_stats(
                 GROUP BY category, EXTRACT(YEAR FROM expense_date), EXTRACT(MONTH FROM expense_date)
                 ORDER BY year DESC, month DESC
             """,
-                trend_params
+                trend_params,
             )
             trend_data = db.fetchall()
-            
+
             for row in trend_data:
                 category = row["category"]
                 if category not in monthly_trends:
                     monthly_trends[category] = []
-                monthly_trends[category].append({
-                    "year": int(row["year"]),
-                    "month": int(row["month"]),
-                    "total": float(row["monthly_total"]),
-                    "count": int(row["monthly_count"])
-                })
-        
+                monthly_trends[category].append(
+                    {
+                        "year": int(row["year"]),
+                        "month": int(row["month"]),
+                        "total": float(row["monthly_total"]),
+                        "count": int(row["monthly_count"]),
+                    }
+                )
+
         return {
             "period": period,
             "year": year,
@@ -740,7 +719,7 @@ def get_category_stats(
             },
             "monthly_trends": monthly_trends,
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting category stats: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get category statistics")

@@ -1,7 +1,8 @@
-from logger import get_logger
-from database import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+
+from database import get_db
+from logger import get_logger
 from models.schemas import Token, UserCreate, UserOut
 from security import create_access_token, get_password_hash, verify_password
 
@@ -13,14 +14,14 @@ auth_route = APIRouter(tags=["auth"])
 @auth_route.post("/register", response_model=UserOut)
 def register(user: UserCreate, db=Depends(get_db)):
     logger.info(f"Registering new user: {user.email}")
-    
+
     # 1. Check for existing email
     db.execute("SELECT id FROM users WHERE email = %s", (user.email,))
-    
+
     if db.fetchone():
         logger.info("Email already registered")
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     # 2. Hash password & insert
     hashed_pw = get_password_hash(user.password)
     logger.info("Inserting new user into database")
