@@ -1,11 +1,5 @@
 import logging
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+from core import config
 
 
 class AnsiColorFormatter(logging.Formatter):
@@ -42,12 +36,12 @@ def configure_logging():
 
     # Configure root logger
     root_logger.addHandler(console_handler)
-    root_logger.setLevel(LOG_LEVEL)
+    root_logger.setLevel(config.app.LOG_LEVEL)
 
 
 def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
-    logger.setLevel(LOG_LEVEL)
+    logger.setLevel(config.app.LOG_LEVEL)
     return logger
 
 

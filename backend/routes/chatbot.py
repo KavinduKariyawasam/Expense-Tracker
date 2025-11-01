@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -48,7 +48,7 @@ async def chat_with_bot(
 
         response_text = expense_tracker_agent.chat(chat_message.message)
 
-        return ChatResponse(response=response_text, timestamp=datetime.utcnow().isoformat())
+        return ChatResponse(response=response_text, timestamp=datetime.now(timezone.utc).isoformat())
 
     except Exception as e:
         logger.error(f"Error in chatbot: {e}")

@@ -1,20 +1,14 @@
 import base64
-import os
-
 import cv2
 import numpy as np
-from dotenv import load_dotenv
 from mistralai import Mistral
 
 from logger import get_logger
+from core import config
 
 logger = get_logger(__name__)
 
-load_dotenv()
-
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-client = Mistral(api_key=MISTRAL_API_KEY)
+client = Mistral(api_key=config.ocr.MISTRAL_API_KEY)
 
 
 def jpeg_bytes_from_ndarray(img: np.ndarray, quality: int = 90) -> bytes:

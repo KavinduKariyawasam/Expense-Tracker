@@ -1,19 +1,14 @@
-import os
-
 import psycopg2
 import psycopg2.extras
-from dotenv import load_dotenv
-
-load_dotenv()
-
+from core import config
 
 def get_db():
     conn = psycopg2.connect(
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
+        dbname=config.database.DB_NAME,
+        user=config.database.DB_USER,
+        password=config.database.DB_PASSWORD,
+        host=config.database.DB_HOST,
+        port=config.database.DB_PORT,
     )
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:

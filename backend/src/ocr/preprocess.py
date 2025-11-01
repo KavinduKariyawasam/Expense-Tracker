@@ -1,4 +1,3 @@
-import logging
 import os
 
 import cv2
@@ -8,15 +7,11 @@ from dotenv import load_dotenv
 from scipy.fftpack import dct, idct
 from scipy.ndimage import binary_fill_holes
 from skimage import color, filters, measure, morphology
+from logger import get_logger
 
 load_dotenv()
-# Set up logging
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-logging.basicConfig(level=LOG_LEVEL, handlers=[handler])
+logger = get_logger(__name__)
 
 
 def order_points(pts):
@@ -31,9 +26,9 @@ def order_points(pts):
 
 
 def preprocess_image(img):
-    logging.info("Starting image preprocessing...")
+    logger.info("Starting image preprocessing...")
     if img is None:
-        logging.error("Image is None, cannot preprocess.")
+        logger.error("Image is None, cannot preprocess.")
         return None
     gray = color.rgb2gray(img)
     # DCT-based filtering
@@ -59,7 +54,7 @@ def preprocess_image(img):
     if len(approx) == 4:
         corners = approx.reshape(4, 2).astype(np.float32)
     else:
-        logging.warning("Irregular contour detected, using minAreaRect for warping.")
+        logger.warning("Irregular contour detected, using minAreaRect for warping.")
         rect = cv2.minAreaRect(largest_contour)
         box = cv2.boxPoints(rect)
         corners = box.astype(np.float32)
@@ -76,7 +71,7 @@ def preprocess_image(img):
     maxHeight = int(max(heightA, heightB))
 
     if maxWidth < 10 or maxHeight < 10:
-        logging.warning("Image dimensions are too small for warping, returning original image.")
+        logger.warning("Image dimensions are too small for warping, returning original image.")
         warped = (img * 255).astype(np.uint8)
     else:
         # desired destination points for the warped image

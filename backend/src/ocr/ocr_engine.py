@@ -1,28 +1,27 @@
-import os
-
 import cv2
 import easyocr
-from dotenv import load_dotenv
 
 from logger import get_logger
 
 logger = get_logger(__name__)
 
-load_dotenv()
-
-# Set up logger
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-
 
 def ocr_with_easyocr(image, langs=["en"]):
     logger.info("Starting OCR with EasyOCR...")
-    EASYOCR_READER = easyocr.Reader(["en"], gpu=False)
+    
+    logger.info(f"Initializing EasyOCR reader with languages: {langs}")
+    easy_ocr_reader = easyocr.Reader(langs, gpu=False)
 
     if len(image.shape) == 2:
+        logger.info("Image is grayscale, converting to RGB.")
         img = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     else:
+        logger.info("Image is color, converting BGR to RGB.")
         img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = EASYOCR_READER.readtext(img, detail=0, paragraph=True)
+        
+    logger.info("Performing OCR...")
+    results = easy_ocr_reader.readtext(img, detail=0, paragraph=True)
+    
 
     text = "\n".join(results)
     return text

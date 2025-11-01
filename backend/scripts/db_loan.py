@@ -1,17 +1,8 @@
-import os
-
 import psycopg2
-from dotenv import load_dotenv
+from core import config
+from logger import get_logger
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Database connection parameters
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+logger = get_logger(__name__)
 
 # SQL statements to create loan tables
 CREATE_LOANS_TABLE = """
@@ -144,50 +135,50 @@ def create_tables():
     try:
         # Connect to the PostgreSQL database
         connection = psycopg2.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
+            host=config.db.HOST,
+            port=config.db.PORT,
+            database=config.db.NAME,
+            user=config.db.USER,
+            password=config.db.PASSWORD,
         )
         cursor = connection.cursor()
 
-        print("Creating loan management tables...")
+        logger.info("Creating loan management tables...")
 
         # Execute SQL statements to create tables
-        print("Creating loans table...")
+        logger.info("Creating loans table...")
         cursor.execute(CREATE_LOANS_TABLE)
 
-        print("Creating loan_transactions table...")
+        logger.info("Creating loan_transactions table...")
         cursor.execute(CREATE_LOAN_TRANSACTIONS_TABLE)
 
-        print("Creating indexes...")
+        logger.info("Creating indexes...")
         cursor.execute(CREATE_INDEXES)
 
-        print("Creating trigger functions...")
+        logger.info("Creating trigger functions...")
         cursor.execute(CREATE_UPDATE_TRIGGER_FUNCTION)
         cursor.execute(CREATE_STATUS_UPDATE_FUNCTION)
         cursor.execute(CREATE_BALANCE_UPDATE_FUNCTION)
 
-        print("Creating triggers...")
+        logger.info("Creating triggers...")
         cursor.execute(CREATE_UPDATE_TRIGGER)
         cursor.execute(CREATE_STATUS_TRIGGER)
         cursor.execute(CREATE_BALANCE_TRIGGER)
 
         # Commit changes
         connection.commit()
-        print("✅ Loan management tables created successfully!")
-        print("\nCreated tables:")
-        print("- loans (main loan tracking table)")
-        print("- loan_transactions (payment/interest tracking)")
-        print("\nCreated indexes for performance optimization")
-        print("Created automatic triggers for:")
-        print("- Updating timestamps")
-        print("- Managing loan status")
-        print("- Calculating loan balances")
+        logger.info("Loan management tables created successfully!")
+        logger.info("\nCreated tables:")
+        logger.info("- loans (main loan tracking table)")
+        logger.info("- loan_transactions (payment/interest tracking)")
+        logger.info("\nCreated indexes for performance optimization")
+        logger.info("Created automatic triggers for:")
+        logger.info("- Updating timestamps")
+        logger.info("- Managing loan status")
+        logger.info("- Calculating loan balances")
 
     except Exception as e:
-        print(f"❌ An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         if connection:
             connection.rollback()
     finally:
@@ -195,22 +186,22 @@ def create_tables():
         if connection:
             cursor.close()
             connection.close()
-            print("\nDatabase connection closed.")
+            logger.info("Database connection closed.")
 
 
 def drop_tables():
     """Function to drop loan tables if needed for cleanup"""
     try:
         connection = psycopg2.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
+            host=config.db.HOST,
+            port=config.db.PORT,
+            database=config.db.NAME,
+            user=config.db.USER,
+            password=config.db.PASSWORD,
         )
         cursor = connection.cursor()
 
-        print("Dropping loan management tables...")
+        logger.info("Dropping loan management tables...")
 
         # Drop triggers first
         cursor.execute("DROP TRIGGER IF EXISTS trigger_update_loan_balance ON loan_transactions;")
@@ -227,10 +218,10 @@ def drop_tables():
         cursor.execute("DROP FUNCTION IF EXISTS update_loans_updated_at();")
 
         connection.commit()
-        print("✅ Loan management tables dropped successfully!")
+        logger.info("Loan management tables dropped successfully!")
 
     except Exception as e:
-        print(f"❌ An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         if connection:
             connection.rollback()
     finally:
@@ -246,4 +237,4 @@ if __name__ == "__main__":
         drop_tables()
     else:
         create_tables()
-        print("\nTo drop these tables, run: python db_loan.py drop")
+        logger.info("\nTo drop these tables, run: python db_loan.py drop")

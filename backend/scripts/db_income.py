@@ -1,17 +1,7 @@
 import os
 
 import psycopg2
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Database connection parameters
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+from core import config
 
 # SQL statements to create tables
 CREATE_INCOME_TABLE = """
@@ -45,11 +35,11 @@ def create_tables():
     try:
         # Connect to the PostgreSQL database
         connection = psycopg2.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
+            host=config.db.HOST,
+            port=config.db.PORT,
+            database=config.db.NAME,
+            user=config.db.USER,
+            password=config.db.PASSWORD,
         )
         cursor = connection.cursor()
 

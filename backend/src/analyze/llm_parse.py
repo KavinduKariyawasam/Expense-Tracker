@@ -1,26 +1,16 @@
 import json
-import os
 import re
-
-from dotenv import load_dotenv
 from groq import Groq
-
 from logger import get_logger
-
-load_dotenv()
-
-# Initialize Groq client using environment variable
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+from core import config
 
 logger = get_logger(__name__)
 
-if not GROQ_API_KEY:
+if not config.llm.GROQ_API_KEY:
     logger.error("GROQ_API_KEY is not set in the environment variables.")
     raise ValueError("Please set the GROQ_API_KEY environment variable")
 
-client = Groq(api_key=GROQ_API_KEY)
+client = Groq(api_key=config.llm.GROQ_API_KEY)
 
 
 def parse_invoice(ocr_text):
@@ -57,7 +47,7 @@ def parse_invoice(ocr_text):
         {"role": "user", "content": USER_PROMPT_TEMPLATE.format(ocr_text=ocr_text)},
     ]
 
-    response = client.chat.completions.create(model=GROQ_MODEL, messages=messages, max_tokens=1024, temperature=0.4)
+    response = client.chat.completions.create(model=config.llm.GROQ_MODEL, messages=messages, max_tokens=1024, temperature=0.4)
 
     content = response.choices[0].message.content
 
