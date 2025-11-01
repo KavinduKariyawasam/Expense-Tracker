@@ -98,6 +98,12 @@ export default function Dashboard() {
     });
   };
 
+  // Get current month name
+  const getCurrentMonthName = () => {
+    const currentDate = new Date();
+    return currentDate.toLocaleDateString("en-US", { month: "long" });
+  };
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -132,15 +138,9 @@ export default function Dashboard() {
             Monthly Stats
           </span>
           <div
-            className="toggle-switch"
+            className={`toggle-switch ${!showMonthlyStats ? "total" : ""}`}
             onClick={() => setShowMonthlyStats(!showMonthlyStats)}
-          >
-            <div
-              className={`toggle-slider ${
-                showMonthlyStats ? "monthly" : "total"
-              }`}
-            ></div>
-          </div>
+          ></div>
           <span className={`toggle-label ${!showMonthlyStats ? "active" : ""}`}>
             Total Stats
           </span>
@@ -155,7 +155,7 @@ export default function Dashboard() {
             <div className="stat-card primary">
               <div className="stat-icon">💰</div>
               <div className="stat-info">
-                <h3>This Month Income</h3>
+                <h3>{getCurrentMonthName()} Income</h3>
                 <p className="stat-value-normal">
                   {formatCurrency(stats.monthly_income)}
                 </p>
@@ -166,7 +166,7 @@ export default function Dashboard() {
             <div className="stat-card secondary">
               <div className="stat-icon">💸</div>
               <div className="stat-info">
-                <h3>This Month Expense</h3>
+                <h3>{getCurrentMonthName()} Expense</h3>
                 <p className="stat-value-normal">
                   {formatCurrency(stats.monthly_expenses)}
                 </p>
@@ -177,7 +177,7 @@ export default function Dashboard() {
             <div className="stat-card quaternary">
               <div className="stat-icon">📊</div>
               <div className="stat-info">
-                <h3>This Month Net</h3>
+                <h3>{getCurrentMonthName()} Net</h3>
                 <p
                   className={`stat-value ${
                     stats.monthly_net >= 0 ? "positive" : "negative"
