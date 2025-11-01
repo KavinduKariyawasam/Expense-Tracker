@@ -368,3 +368,30 @@ export const deleteLoanTransaction = async (loanId, transactionId) => {
 
   return response.json();
 };
+
+export const getCategoryStats = async (
+  period = "all",
+  year = null,
+  month = null
+) => {
+  const params = new URLSearchParams({
+    period: period.toString(),
+  });
+
+  if (year) params.append("year", year.toString());
+  if (month) params.append("month", month.toString());
+
+  const response = await fetch(`${API_URL}/category-stats?${params}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("401: Unauthorized");
+    }
+    throw new Error("Failed to fetch category statistics");
+  }
+
+  return response.json();
+};

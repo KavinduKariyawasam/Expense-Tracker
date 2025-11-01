@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Register from "./components/Register";
 import Login from "./components/Login";
-import DashboardNew from "./components/DashboardNew";
+import Dashboard from "./components/Dashboard";
 import Expenses from "./components/Expenses";
 import Income from "./components/Income";
 import LoanManager from "./components/LoanManager";
@@ -23,7 +23,7 @@ function App() {
           element={
             <PrivateRoute>
               <Layout>
-                <DashboardNew />
+                <Dashboard />
               </Layout>
             </PrivateRoute>
           }
