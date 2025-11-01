@@ -1,12 +1,10 @@
 import json
-import logging
 import os
 import re
-import sys
 
 from dotenv import load_dotenv
 from groq import Groq
-from src.utils import ColorFormatter
+from logger import get_logger
 
 load_dotenv()
 
@@ -15,20 +13,17 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
-handler = logging.StreamHandler(sys.stdout)
-formatter = ColorFormatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-logging.basicConfig(level=LOG_LEVEL, handlers=[handler])
+logger = get_logger(__name__)
 
 if not GROQ_API_KEY:
-    logging.error("GROQ_API_KEY is not set in the environment variables.")
+    logger.error("GROQ_API_KEY is not set in the environment variables.")
     raise ValueError("Please set the GROQ_API_KEY environment variable")
 
 client = Groq(api_key=GROQ_API_KEY)
 
 
 def parse_invoice(ocr_text):
-    logging.info("Starting invoice parsing with GroqChat...")
+    logger.info("Starting invoice parsing with GroqChat...")
     INVOICE_SCHEMA = {
         "vendor": "string",
         "invoice_date": "YYYY-MM-DD",
@@ -81,7 +76,7 @@ def parse_invoice(ocr_text):
 
 
 def categorize_and_sum_items(items):
-    logging.info("Starting item categorization with GroqChat...")
+    logger.info("Starting item categorization with GroqChat...")
     items_text = json.dumps(items, indent=2)
 
     CATEGORY_PROMPT = (
@@ -107,7 +102,7 @@ def categorize_and_sum_items(items):
 
     content = response.choices[0].message.content.strip()
 
-    logging.debug("LLM response content: %s", content)
+    logger.debug("LLM response content: %s", content)
 
     content_clean = re.sub(r"^```(?:json)?\s*", "", content, flags=re.MULTILINE)
     content_clean = re.sub(r"```$", "", content_clean, flags=re.MULTILINE)
@@ -115,7 +110,7 @@ def categorize_and_sum_items(items):
     try:
         categorized_items = json.loads(content_clean)
     except json.JSONDecodeError:
-        logging.error("Failed to parse LLM response as JSON: %s", content_clean)
+        logger.error("Failed to parse LLM response as JSON: %s", content_clean)
         raise ValueError(f"Could not parse LLM response as JSON:\n{content_clean}")
 
     totals = {}

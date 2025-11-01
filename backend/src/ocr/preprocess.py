@@ -2,7 +2,7 @@ import logging
 import os
 
 import cv2
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 from dotenv import load_dotenv
 from scipy.fftpack import dct, idct

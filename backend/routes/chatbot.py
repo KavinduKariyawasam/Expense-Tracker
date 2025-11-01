@@ -1,16 +1,15 @@
-import logging
 import os
 from datetime import datetime
 
 from auth import get_current_user
+from logger import get_logger
 from src.chatbot import agent
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from src.chatbot.agent import expense_tracker_agent
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 chatbot_route = APIRouter(prefix="/chatbot", tags=["chatbot"])
 

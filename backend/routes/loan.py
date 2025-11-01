@@ -1,8 +1,8 @@
-import logging
 from datetime import date
 from typing import List
 
 from auth import get_current_user
+from logger import get_logger
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from models.schemas import (
@@ -14,8 +14,7 @@ from models.schemas import (
     LoanUpdate,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 loan_route = APIRouter(prefix="/loans", tags=["loans"])
 

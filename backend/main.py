@@ -1,9 +1,5 @@
-import logging
-import os
 from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
+from logger import get_logger
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,27 +14,39 @@ from routes import (
     stats_route,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Load environment variables from .env file
+load_dotenv()
 
-app = FastAPI()
+logger = get_logger(__name__)
 
 
-app.include_router(expense_route)
-app.include_router(income_route)
-app.include_router(stats_route)
-app.include_router(bill_route)
-app.include_router(auth_route)
-app.include_router(loan_route)
-app.include_router(chatbot_route)
+def create_app():
+    logger.info("Creating FastAPI application")
+    app = FastAPI()
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    logger.info("Including routers")
+    app.include_router(expense_route)
+    app.include_router(income_route)
+    app.include_router(stats_route)
+    app.include_router(bill_route)
+    app.include_router(auth_route)
+    app.include_router(loan_route)
+    app.include_router(chatbot_route)
+    
+    logger.info("Setting up CORS middleware")
+
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000"],  # React dev server
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    logger.info("FastAPI application created successfully")
+    return app
+
+app = create_app()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")

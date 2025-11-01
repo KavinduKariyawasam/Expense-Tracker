@@ -1,5 +1,4 @@
 from datetime import date, datetime
-from decimal import Decimal
 from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, validator
@@ -18,7 +17,7 @@ class UserOut(BaseModel):
     email: EmailStr
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Token(BaseModel):

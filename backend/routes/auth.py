@@ -1,13 +1,11 @@
-import logging
-
+from logger import get_logger
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from models.schemas import Token, UserCreate, UserOut
 from security import create_access_token, get_password_hash, verify_password
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 auth_route = APIRouter(tags=["auth"])
 

@@ -1,15 +1,14 @@
-import logging
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from auth import get_current_user
+from logger import get_logger
 from database import get_db
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from models.schemas import BillData
 from utils import run_ocr_only_bytes
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 bill_route = APIRouter(tags=["bill"])
 

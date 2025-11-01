@@ -1,25 +1,17 @@
 import base64
-import logging
 import os
-import sys
-from io import BytesIO
 
 import cv2
 import numpy as np
 from dotenv import load_dotenv
 from mistralai import Mistral
-from src.utils import ColorFormatter
+from logger import get_logger
 
-# from src.ocr.preprocess import preprocess_image
+logger = get_logger(__name__)
 
 load_dotenv()
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-
-handler = logging.StreamHandler(sys.stdout)
-formatter = ColorFormatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-logging.basicConfig(level=LOG_LEVEL, handlers=[handler])
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 client = Mistral(api_key=MISTRAL_API_KEY)
 
@@ -36,12 +28,7 @@ def base64_from_bytes(b: bytes) -> str:
 
 
 def mistral_ocr(preprocessed):
-    logging.info("Starting OCR with Mistral...")
-    # raw_bgr = cv2.imread(image_path)
-    # if raw_bgr is None:
-    #     raise FileNotFoundError(image_path)
-
-    # preprocessed = preprocess_image(raw_bgr)
+    logger.info("Starting OCR with Mistral...")
 
     if preprocessed.dtype != np.uint8:
         preprocessed = cv2.normalize(

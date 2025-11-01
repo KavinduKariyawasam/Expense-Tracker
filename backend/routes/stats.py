@@ -1,12 +1,11 @@
-import logging
 from datetime import datetime, timedelta
 
 from auth import get_current_user
+from logger import get_logger
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 stats_route = APIRouter(tags=["stats"])
 

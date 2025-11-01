@@ -1,16 +1,16 @@
 """
 LangChain tools for the expense tracker chatbot
 """
-import logging
 from datetime import datetime, timedelta
 from typing import Optional
+from logger import get_logger
 from langchain.tools import tool
 
 # Global variables to store database connection and user context
 _db_connection = None
 _current_user_id = None
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def set_db_connection(db):
     """Set the database connection for tools to use"""
