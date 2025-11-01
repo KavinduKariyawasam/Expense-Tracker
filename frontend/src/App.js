@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Expenses from "./components/Expenses";
 import Income from "./components/Income";
+import Investment from "./components/Investment";
 import LoanManager from "./components/LoanManager";
 import ReportsPage from "./components/ReportsPage";
 import Settings from "./components/Settings";
@@ -44,6 +45,16 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <Income />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/investments"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <Investment />
               </Layout>
             </PrivateRoute>
           }

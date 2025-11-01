@@ -297,3 +297,140 @@ class LoanSummary(BaseModel):
     active_loans_received: int
     overdue_loans_given: int
     overdue_loans_received: int
+
+
+# Investment Transaction schemas
+class InvestmentTransactionCreate(BaseModel):
+    transaction_type: str  # 'buy', 'sell', 'dividend', 'split', 'bonus', 'fee'
+    amount: float
+    shares: Optional[float] = None
+    price_per_share: Optional[float] = None
+    transaction_date: date
+    description: Optional[str] = None
+    fees: Optional[float] = 0.0
+
+    @validator("amount", "shares", "price_per_share", "fees")
+    def validate_decimals(cls, v):
+        if v is None:
+            return v
+        return round(float(v), 2)
+
+    @validator("transaction_type")
+    def validate_transaction_type(cls, v):
+        allowed_types = ["buy", "sell", "dividend", "split", "bonus", "fee", "adjustment"]
+        if v not in allowed_types:
+            raise ValueError(f"Transaction type must be one of: {allowed_types}")
+        return v
+
+
+class InvestmentTransactionOut(BaseModel):
+    id: int
+    investment_id: int
+    transaction_type: str
+    amount: float
+    shares: Optional[float]
+    price_per_share: Optional[float]
+    transaction_date: date
+    description: Optional[str]
+    fees: float
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Investment schemas
+class InvestmentCreate(BaseModel):
+    name: str
+    type: str  # 'stocks', 'bonds', 'mutual_funds', 'etf', 'crypto', 'real_estate', 'fixed_deposit', 'other'
+    description: Optional[str] = None
+    initial_amount: float
+    current_value: Optional[float] = None
+    purchase_date: date
+    platform: Optional[str] = None
+    currency: Optional[str] = "LKR"
+    status: Optional[str] = "active"
+
+    @validator("initial_amount", "current_value")
+    def validate_amounts(cls, v):
+        if v is None:
+            return v
+        if v < 0:
+            raise ValueError("Amount cannot be negative")
+        return round(float(v), 2)
+
+    @validator("type")
+    def validate_type(cls, v):
+        allowed_types = ["stocks", "bonds", "mutual_funds", "etf", "crypto", "real_estate", "fixed_deposit", "other"]
+        if v not in allowed_types:
+            raise ValueError(f"Investment type must be one of: {allowed_types}")
+        return v
+
+    @validator("status")
+    def validate_status(cls, v):
+        if v is not None:
+            allowed_statuses = ["active", "sold", "matured", "cancelled"]
+            if v not in allowed_statuses:
+                raise ValueError(f"Status must be one of: {allowed_statuses}")
+        return v
+
+
+class InvestmentOut(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    type: str
+    description: Optional[str]
+    initial_amount: float
+    current_value: float
+    purchase_date: date
+    platform: Optional[str]
+    currency: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    transactions: List[InvestmentTransactionOut] = []
+
+    class Config:
+        from_attributes = True
+
+
+class InvestmentUpdate(BaseModel):
+    name: Optional[str] = None
+    type: Optional[str] = None
+    description: Optional[str] = None
+    current_value: Optional[float] = None
+    platform: Optional[str] = None
+    status: Optional[str] = None
+
+    @validator("current_value")
+    def validate_current_value(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("Current value cannot be negative")
+        return v
+
+    @validator("type")
+    def validate_type(cls, v):
+        if v is not None:
+            allowed_types = ["stocks", "bonds", "mutual_funds", "etf", "crypto", "real_estate", "fixed_deposit", "other"]
+            if v not in allowed_types:
+                raise ValueError(f"Investment type must be one of: {allowed_types}")
+        return v
+
+    @validator("status")
+    def validate_status(cls, v):
+        if v is not None:
+            allowed_statuses = ["active", "sold", "matured", "cancelled"]
+            if v not in allowed_statuses:
+                raise ValueError(f"Status must be one of: {allowed_statuses}")
+        return v
+
+
+class InvestmentSummary(BaseModel):
+    total_investments: int
+    total_invested: float
+    current_total_value: float
+    total_gain_loss: float
+    total_gain_loss_percentage: float
+    by_type: dict = {}
+    by_status: dict = {}

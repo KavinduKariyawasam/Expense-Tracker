@@ -1,14 +1,11 @@
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 
 from logger import get_logger
 from routes import (auth_route, bill_route, chatbot_route, expense_route,
-                    income_route, loan_route, stats_route)
+                    income_route, investment_route, loan_route, stats_route)
 
-# Load environment variables from .env file
-load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -20,6 +17,7 @@ def create_app():
     logger.info("Including routers")
     app.include_router(expense_route)
     app.include_router(income_route)
+    app.include_router(investment_route)
     app.include_router(stats_route)
     app.include_router(bill_route)
     app.include_router(auth_route)

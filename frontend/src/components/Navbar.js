@@ -43,6 +43,15 @@ const Navbar = () => {
             Income
           </Link>
           <Link
+            to="/investments"
+            className={`navbar-item ${
+              isActive("/investments") ? "active" : ""
+            }`}
+          >
+            <span className="navbar-icon">📈</span>
+            Invests
+          </Link>
+          <Link
             to="/loans"
             className={`navbar-item ${isActive("/loans") ? "active" : ""}`}
           >
